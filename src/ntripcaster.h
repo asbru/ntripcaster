@@ -394,6 +394,8 @@ typedef struct
   char *auto_mount;
   int read_gpgga_interval; // read gga interval in seconds
 
+  char *mdp_url; // MDP Broker url, tpc://<mdp_broker_host>:<mdp_broker_port>
+
 } server_info_t;
 
 #endif

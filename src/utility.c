@@ -1264,6 +1264,7 @@ set_element configfile_settings[] = {
   { "auto_mount", string_e, "auto-change station", NULL },
   { "read_gpgga_interval", integer_e,
     "interval for reading client gpgga message", NULL },
+  { "mdp_url", string_e, "MDP broker url", NULL },
   { (char *)NULL, 0, (char *)NULL, NULL }
 };
 

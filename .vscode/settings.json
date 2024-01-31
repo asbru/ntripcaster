@@ -1,4 +1,9 @@
 {
     "C_Cpp.clang_format_style": "GNU",
-    "C_Cpp.formatting": "clangFormat"
+    "C_Cpp.formatting": "clangFormat",
+    "files.associations": {
+        "exception": "c",
+        "definitions.h": "c",
+        "config.h": "c"
+    }
 }
