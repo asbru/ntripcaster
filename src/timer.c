@@ -52,11 +52,11 @@
 #include <errno.h>
 
 #ifndef __USE_BSD
-#  define __USE_BSD
+#define __USE_BSD
 #endif
 
 #ifndef __EXTENSIONS__
-# define __EXTENSIONS__
+#define __EXTENSIONS__
 #endif
 
 #include <string.h>
@@ -107,7 +107,6 @@ void status_write(server_info_t *infostruct)
 
 	if (lt)
 		free(lt);
-
 }
 
 /* Starts up the calendar thread.
@@ -122,82 +121,93 @@ void *startup_timer_thread(void *arg)
 
 	mt = thread_get_mythread();
 
-	while (thread_alive (mt)) {
+	while (thread_alive(mt))
+	{
 		time_t stime = get_time();
 
-		timer_handle_status_lines (stime);
+		timer_handle_status_lines(stime);
 
-		timer_handle_transfer_statistics (stime, &trottime, &justone, &trotstat);
+		timer_handle_transfer_statistics(stime, &trottime, &justone, &trotstat);
 
 		if (mt->ping == 1)
 			mt->ping = 0;
 
 		my_sleep(400000);
 	}
-	
+
 	thread_exit(7);
 	return NULL;
 }
 
-void
-timer_handle_status_lines (time_t stime)
+void timer_handle_status_lines(time_t stime)
 {
-	if ((stime - info.statuslasttime) >= info.statustime) {
+	if ((stime - info.statuslasttime) >= info.statustime)
+	{
 		info.statuslasttime = stime;
 		status_write(&info);
 	}
 }
 
-void
-timer_handle_transfer_statistics (time_t stime, time_t *trottime, time_t *justone, statistics_t *trotstat)
+void timer_handle_transfer_statistics(time_t stime, time_t *trottime, time_t *justone, statistics_t *trotstat)
 {
-	if (get_time() != *justone) {
+	if (get_time() != *justone)
+	{
 		*justone = get_time();
-		
-		if ((stime % 86400) == 0) {
+
+		if ((stime % 86400) == 0)
+		{
 			statistics_t stat, hourlystats;
-			
+
 			get_hourly_stats(&hourlystats);
 			zero_stats(&info.hourly_stats);
 			update_daily_statistics(&hourlystats);
-			
+
 			get_daily_stats(&stat);
 			zero_stats(&info.daily_stats);
 			update_total_statistics(&stat);
 			write_daily_stats(&stat);
-		} else if ((stime % 3600) == 0) {
+		}
+		else if ((stime % 3600) == 0)
+		{
 			statistics_t stat;
 			get_hourly_stats(&stat);
 			zero_stats(&info.hourly_stats);
 			update_daily_statistics(&stat);
 			write_hourly_stats(&stat);
 		}
-		
-		if ((stime % 60) == 0) {
+
+		if ((stime % 60) == 0)
+		{
 			time_t delta;
 			statistics_t stat;
 			unsigned int total_bytes;
 
 			double KB_per_sec = 0;
-			
+
 			get_running_stats(&stat);
-			
-			if (*trottime == 0) {
+
+			if (*trottime == 0)
+			{
 				*trottime = get_time();
 				get_running_stats(trotstat);
-			} else {
+			}
+			else
+			{
 				total_bytes = (stat.read_kilos - trotstat->read_kilos) + (stat.write_kilos - trotstat->write_kilos);
 				delta = get_time() - *trottime;
-				if (delta <= 0) {
-					write_log(LOG_DEFAULT, 
-						"ERROR: Losing track of time.. is it xmas already? [%d - %d == %d <= 0]", 
-						get_time (), *trottime, delta);
-				} else {
+				if (delta <= 0)
+				{
+					write_log(LOG_DEFAULT,
+							  "ERROR: Losing track of time.. is it xmas already? [%d - %d == %d <= 0]",
+							  get_time(), *trottime, delta);
+				}
+				else
+				{
 					KB_per_sec = (double)total_bytes / (double)delta;
 
-					if (KB_per_sec < 40000000) {
+					if (KB_per_sec < 40000000)
+					{
 						info.bandwidth_usage = KB_per_sec;
-
 					}
 				}
 				get_running_stats(trotstat);
@@ -226,9 +236,8 @@ void write_hourly_stats(statistics_t *stat)
 	get_current_stats(&running);
 	add_stats(stat, &running, 0);
 
-	strncpy(cct, connect_average (stat->client_connect_time, stat->client_connections + info.num_clients, timebuf), BUFSIZE);
-	strncpy(sct, connect_average (stat->source_connect_time, stat->source_connections + info.num_sources, timebuf), BUFSIZE);
-		 
+	strncpy(cct, connect_average(stat->client_connect_time, stat->client_connections + info.num_clients, timebuf), BUFSIZE);
+	strncpy(sct, connect_average(stat->source_connect_time, stat->source_connections + info.num_sources, timebuf), BUFSIZE);
 }
 
 void update_daily_statistics(statistics_t *stat)
@@ -243,7 +252,7 @@ void update_daily_statistics(statistics_t *stat)
 	thread_mutex_unlock(&info.misc_mutex);
 }
 
-void get_daily_stats (statistics_t *stat)
+void get_daily_stats(statistics_t *stat)
 {
 	thread_mutex_lock(&info.misc_mutex);
 	stat->read_bytes = info.daily_stats.read_bytes;
@@ -280,36 +289,37 @@ void write_daily_stats(statistics_t *stat)
 	get_current_stats(&running);
 	add_stats(stat, &running, 0);
 
-	strncpy(cct, connect_average (stat->client_connect_time, stat->client_connections + info.num_clients, timebuf), BUFSIZE);
-	strncpy(sct, connect_average (stat->source_connect_time, stat->source_connections + info.num_sources, timebuf), BUFSIZE);
-}
-		
-void get_current_stats(statistics_t *stat)
-{
-	get_current_stats_proc (stat, 1);
+	strncpy(cct, connect_average(stat->client_connect_time, stat->client_connections + info.num_clients, timebuf), BUFSIZE);
+	strncpy(sct, connect_average(stat->source_connect_time, stat->source_connections + info.num_sources, timebuf), BUFSIZE);
 }
 
-void get_current_stats_proc (statistics_t *stat, int lock)
+void get_current_stats(statistics_t *stat)
+{
+	get_current_stats_proc(stat, 1);
+}
+
+void get_current_stats_proc(statistics_t *stat, int lock)
 {
 	avl_traverser trav = {0};
 	time_t ec = 0, cc = 0;
 	connection_t *travcon;
 
 	zero_stats(stat);
-	
+
 	if (lock)
 		thread_mutex_lock(&info.double_mutex);
 	thread_mutex_lock(&info.source_mutex);
 
 	ec = (time_t)tree_time(info.sources);
-	while ((travcon = avl_traverse(info.sources, &trav))) {
+	while ((travcon = avl_traverse(info.sources, &trav)))
+	{
 		thread_mutex_lock(&travcon->food.source->mutex);
 		cc += (time_t)tree_time(travcon->food.source->clients);
 		thread_mutex_unlock(&travcon->food.source->mutex);
 	}
 
 	thread_mutex_unlock(&info.source_mutex);
-	
+
 	if (lock)
 		thread_mutex_unlock(&info.double_mutex);
 
@@ -319,18 +329,18 @@ void get_current_stats_proc (statistics_t *stat, int lock)
 
 void get_running_stats(statistics_t *stat)
 {
-	get_running_stats_proc (stat, 1);
+	get_running_stats_proc(stat, 1);
 }
 
-void get_running_stats_proc (statistics_t *stat, int lock)
+void get_running_stats_proc(statistics_t *stat, int lock)
 {
 	statistics_t bufstat;
 
-// megabytes
+	// megabytes
 	stat->read_bytes = info.total_stats.read_bytes;
 	stat->write_bytes = info.total_stats.write_bytes;
 
-// kilobytes
+	// kilobytes
 	stat->read_kilos = info.total_stats.read_kilos;
 	stat->write_kilos = info.total_stats.write_kilos;
 
@@ -338,24 +348,25 @@ void get_running_stats_proc (statistics_t *stat, int lock)
 	stat->source_connections = info.total_stats.source_connections;
 	stat->client_connect_time = info.total_stats.client_connect_time;
 	stat->source_connect_time = info.total_stats.source_connect_time;
-	
-// bytes
-	get_current_stats_proc (&bufstat, lock);
+
+	// bytes
+	get_current_stats_proc(&bufstat, lock);
 	add_stats(stat, &bufstat, 0);
 
-// bytes
+	// bytes
 	get_hourly_stats(&bufstat);
 	add_stats(stat, &bufstat, 0);
-	
-// kilobytes
+
+	// kilobytes
 	get_daily_stats(&bufstat);
 	add_stats(stat, &bufstat, 1000);
 }
 
 void zero_stats(statistics_t *stat)
 {
-	if (!stat) {
-		write_log (LOG_DEFAULT, "WARNING: zero_stats() called with NULL stat pointer");
+	if (!stat)
+	{
+		write_log(LOG_DEFAULT, "WARNING: zero_stats() called with NULL stat pointer");
 		return;
 	}
 
@@ -377,9 +388,9 @@ void add_stats(statistics_t *target, statistics_t *source, unsigned long int fac
 
 	if (factor == 0)
 		div = 1000000.0;
-	else 
+	else
 		div = (1000000.0 / (double)factor);
-	
+
 	target->read_bytes += (unsigned long)(source->read_bytes / div);
 	target->read_kilos += (unsigned long)(source->read_bytes / (div / 1000));
 

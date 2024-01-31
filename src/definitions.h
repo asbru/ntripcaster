@@ -39,35 +39,35 @@
  */
 
 #ifndef __USE_MISC
-# define __USE_MISC
+#define __USE_MISC
 #endif
 
 #ifndef __USE_GNU
-# define __USE_GNU
+#define __USE_GNU
 #endif
 
 #ifndef __USE_BSD
-# define __USE_BSD
+#define __USE_BSD
 #endif
 
 #ifndef __EXTENSIONS__
-# define __EXTENSIONS__
+#define __EXTENSIONS__
 #endif
 
 #ifndef _GNU_SOURCE
-# define _GNU_SOURCE
+#define _GNU_SOURCE
 #endif
 
 #ifndef _THREAD_SAFE
-# define _THREAD_SAFE
+#define _THREAD_SAFE
 #endif
 
 #ifndef _REENTRANT
-# define _REENTRANT
+#define _REENTRANT
 #endif
 
 #ifndef __USE_POSIX
-# define __USE_POSIX
+#define __USE_POSIX
 #endif
 
 #ifndef _POSIX_C_SOURCE
@@ -76,8 +76,7 @@
 
 /* This for freebsd (needed on 3.2 at least) */
 #ifdef SOMEBSD
-# ifndef _POSIX_VERSION
-# define _POSIX_VERSION 199309L
-# endif
+#ifndef _POSIX_VERSION
+#define _POSIX_VERSION 199309L
 #endif
-
+#endif

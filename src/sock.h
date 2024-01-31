@@ -72,15 +72,15 @@ int inet_aton(const char *s, struct in_addr *a);
 
 /* Misc socket functions */
 int sock_set_keepalive(SOCKET sockfd, const int keepalive);
-int sock_set_no_linger (SOCKET sockfd);
-int sock_valid (const SOCKET sockfd);
+int sock_set_no_linger(SOCKET sockfd);
+int sock_valid(const SOCKET sockfd);
 int sock_set_blocking(SOCKET sockfd, const int block);
 int sock_close(SOCKET sockfd);
-SOCKET sock_socket (int domain, int type, int protocol);
-SOCKET sock_accept (SOCKET s, struct sockaddr *addr, mysocklen_t *addrlen);
-SOCKET sock_create_udp_socket ();
-char *sock_get_local_ipaddress ();
-void sock_close_all_sockets ();
+SOCKET sock_socket(int domain, int type, int protocol);
+SOCKET sock_accept(SOCKET s, struct sockaddr *addr, mysocklen_t *addrlen);
+SOCKET sock_create_udp_socket();
+char *sock_get_local_ipaddress();
+void sock_close_all_sockets();
 
 /* Connection related socket functions */
 SOCKET sock_get_server_socket(const int port);
@@ -88,10 +88,10 @@ SOCKET sock_connect_wto(const char *hostname, const int port, const int timeout)
 
 /* Socket write functions */
 int sock_write_bytes(SOCKET sockfd, const char *buff, int len);
-int sock_write_bytes_or_kick (SOCKET sockfd, connection_t *clicon, const char *buff, const int len);
+int sock_write_bytes_or_kick(SOCKET sockfd, connection_t *clicon, const char *buff, const int len);
 int sock_write(SOCKET sockfd, const char *fmt, ...);
-int sock_write_line (SOCKET sockfd, const char *fmt, ...);
-int sock_write_string (SOCKET sokfd, const char *buff);
+int sock_write_line(SOCKET sockfd, const char *fmt, ...);
+int sock_write_string(SOCKET sokfd, const char *buff);
 
 /* Socket read functions */
 int sock_read(SOCKET sockfd, char *buff, const int len);
@@ -100,10 +100,9 @@ int sock_read_lines_np(SOCKET sockfd, char *string, const int len);
 
 /* Libwrap functions */
 int sock_check_libwrap(const SOCKET sock, const contype_t contype);
-const char *sock_get_libwrap_type (const contype_t contype);
+const char *sock_get_libwrap_type(const contype_t contype);
 
 #ifdef DEBUG_SOCKETS
-ice_socket_t *sock_find (SOCKET s);
+ice_socket_t *sock_find(SOCKET s);
 #endif
 #endif
-

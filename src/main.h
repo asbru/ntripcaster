@@ -50,13 +50,13 @@ void startup_mode();
 void clean_shutdown(server_info_t *info);
 void usage();
 void setup_listeners();
-void initialize_network ();
+void initialize_network();
 #ifdef _WIN32
-BOOL WINAPI win_sig_die (DWORD CtrlType);
+BOOL WINAPI win_sig_die(DWORD CtrlType);
 #else
 RETSIGTYPE sig_hup(int signo);
 RETSIGTYPE sig_die(int signo);
-RETSIGTYPE sig_die_hard (int signo);
+RETSIGTYPE sig_die_hard(int signo);
 RETSIGTYPE sig_child(int signo);
 #endif
 char *splitc(char *first, char *rest, const char divider);

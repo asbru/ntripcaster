@@ -69,7 +69,7 @@
 #include <float.h>
 
 #ifndef _WIN32
-#include <sys/socket.h> 
+#include <sys/socket.h>
 #include <sys/wait.h>
 #include <netinet/in.h>
 #else
@@ -103,165 +103,185 @@ extern server_info_t info;
 void source_login(connection_t *con, char *expr)
 {
 	char line[BUFSIZE], command[BUFSIZE], arg[BUFSIZE];
-	char pass[BUFSIZE] ="", *pass2 = NULL;
-	int go_on = 7; //Kun: 2
+	char pass[BUFSIZE] = "", *pass2 = NULL;
+	int go_on = 7; // Kun: 2
 	int connected = 1;
 	int password_accepted = 0;
 	source_t *source;
 	char *res;
-    int v = 1; // V1 or V2;
+	int v = 1; // V1 or V2;
 
 	if (con->type == unknown_connection_e)
 	{
 		put_source(con);
 		con->food.source->type = encoder_e;
-		xa_debug (2, "DEBUG: Encoder logging in with [%s]", expr);
-	} else {
-		xa_debug (2,"DEBUG: Icy encoder logging in with [%s]", expr);
+		xa_debug(2, "DEBUG: Encoder logging in with [%s]", expr);
+	}
+	else
+	{
+		xa_debug(2, "DEBUG: Icy encoder logging in with [%s]", expr);
 	}
 	source = con->food.source;
 	source->source_agent = NULL;
 
-	do {
+	do
+	{
 		command[0] = '\0';
 		arg[0] = '\0';
 
-		if (splitc(line, expr, '\n') == NULL) {
-			strncpy (line, expr, BUFSIZE);
+		if (splitc(line, expr, '\n') == NULL)
+		{
+			strncpy(line, expr, BUFSIZE);
 			go_on = go_on - 1;
 
 			if ((go_on > 0) && (!source->protocol == icy_e && source->type == encoder_e))
 			{
-				sock_read_lines_np (con->sock, expr, BUFSIZE);
+				sock_read_lines_np(con->sock, expr, BUFSIZE);
 			}
 		}
-		
+
 		/* The delimiter on the first line is ' ', on the following lines ':' */
-		if (go_on == 7) 
-			res = splitc (command, line, ' ');
+		if (go_on == 7)
+			res = splitc(command, line, ' ');
 		else
-			res = splitc (command, line, ':');
-		
+			res = splitc(command, line, ':');
+
 		if (!res)
 		{
-			strncpy (command, line, BUFSIZE);
+			strncpy(command, line, BUFSIZE);
 			arg[0] = '\0';
-		} else {
-			strncpy (arg, line, BUFSIZE);
 		}
-		
-		if (line[0])
-			xa_debug (2, "DEBUG: Source line [%d]: [%s] [%s]", go_on--, command, arg);
+		else
+		{
+			strncpy(arg, line, BUFSIZE);
+		}
 
-        if (ice_strncmp(command, "SOURCE", 6) == 0) v=1;
-        // support for ntrip_v2.0
-        if (ice_strncmp(command, "POST", 4) == 0) v=2;
+		if (line[0])
+			xa_debug(2, "DEBUG: Source line [%d]: [%s] [%s]", go_on--, command, arg);
+
+		if (ice_strncmp(command, "SOURCE", 6) == 0)
+			v = 1;
+		// support for ntrip_v2.0
+		if (ice_strncmp(command, "POST", 4) == 0)
+			v = 2;
 
 		if (ice_strncmp(command, "SOURCE", 6) == 0 || ice_strncmp(command, "POST", 4) == 0) // Kun
 		{
-			if (splitc(pass, arg, ' ') == NULL) {
-				sock_write_line (con->sock, "ERROR - Missing Mountpoint\r\n");
-				kick_connection (con, "No Mountpoint supplied");
+			if (splitc(pass, arg, ' ') == NULL)
+			{
+				sock_write_line(con->sock, "ERROR - Missing Mountpoint\r\n");
+				kick_connection(con, "No Mountpoint supplied");
 				connected = 0;
 				return;
 			}
-		    if (v == 1) { //V1 anthentication
-			    if (!password_match(info.encoder_pass, pass)) {
-				    xa_debug (2, "KUN DEBUG: info.encoder_pass %s, pass %s\n", info.encoder_pass, pass);
+			if (v == 1)
+			{ // V1 anthentication
+				if (!password_match(info.encoder_pass, pass))
+				{
+					xa_debug(2, "KUN DEBUG: info.encoder_pass %s, pass %s\n", info.encoder_pass, pass);
 
-				    sock_write_line (con->sock, "ERROR - Bad Password\r\n");
-				    kick_connection (con, "Bad Password");
-				    return;
-			    } else
-				    password_accepted = 1;
-            }
+					sock_write_line(con->sock, "ERROR - Bad Password\r\n");
+					kick_connection(con, "Bad Password");
+					return;
+				}
+				else
+					password_accepted = 1;
+			}
 
 			if (!source->audiocast.mount)
-                //V1 source, pass, mount
-                if (ice_strncmp(command, "SOURCE", 6) == 0)
-				    source->audiocast.mount = my_strdup(arg);
-                //V2 post, mount 
-                if (ice_strncmp(command, "POST", 4) == 0)
-                    source->audiocast.mount = my_strdup(pass);
+				// V1 source, pass, mount
+				if (ice_strncmp(command, "SOURCE", 6) == 0)
+					source->audiocast.mount = my_strdup(arg);
+			// V2 post, mount
+			if (ice_strncmp(command, "POST", 4) == 0)
+				source->audiocast.mount = my_strdup(pass);
 			{
 				char slash[BUFSIZE];
 				if (source->audiocast.mount[0] != '/')
 				{
 					snprintf(slash, BUFSIZE, "/%s", source->audiocast.mount);
-					nfree (source->audiocast.mount);
-					source->audiocast.mount = my_strdup (slash);
+					nfree(source->audiocast.mount);
+					source->audiocast.mount = my_strdup(slash);
 				}
 			}
-			
-			if (mount_exists (source->audiocast.mount) || (source->audiocast.mount[0] == '\0')) {
-				sock_write_line (con->sock, "ERROR - Mount Point Taken or Invalid\r\n");
-				kick_connection (con, "Invalid Mount Point");
+
+			if (mount_exists(source->audiocast.mount) || (source->audiocast.mount[0] == '\0'))
+			{
+				sock_write_line(con->sock, "ERROR - Mount Point Taken or Invalid\r\n");
+				kick_connection(con, "Invalid Mount Point");
 				return;
 			}
 
-            /***for auto select mount point***/
-            get_mount_location_from_file(info.mountposfile, source->audiocast.mount, &source->pos);
+			/***for auto select mount point***/
+			get_mount_location_from_file(info.mountposfile, source->audiocast.mount, &source->pos);
 		}
 		else if (strncasecmp(command, "Source-Agent", 12) == 0 || strncasecmp(command, "User-Agent", 10) == 0)
 		{
 			source->source_agent = my_strdup(arg);
 		}
-        //Authorization: Basic 
-        else if (strncasecmp(arg, " Basic ", 7) == 0) {
-            pass2 = util_base64_decode(arg+7);
-            const char *s2 = pass2;
-            pass2 = strchr(s2, ':')+1;
-            // support for ntrip v2.0
-            if (v == 2) { 
-                if (!password_match(info.encoder_pass, pass2)) {
-                    xa_debug (2, "KUN DEBUG: info.encoder_pass %s, pass2 %s\n", info.encoder_pass, pass2);
-                    sock_write_line (con->sock, "ERROR - Bad Password\r\n");
-                    kick_connection (con, "Bad Password");
-                    return;
-                } else
-                    password_accepted = 1;
-            }
-        }
+		// Authorization: Basic
+		else if (strncasecmp(arg, " Basic ", 7) == 0)
+		{
+			pass2 = util_base64_decode(arg + 7);
+			const char *s2 = pass2;
+			pass2 = strchr(s2, ':') + 1;
+			// support for ntrip v2.0
+			if (v == 2)
+			{
+				if (!password_match(info.encoder_pass, pass2))
+				{
+					xa_debug(2, "KUN DEBUG: info.encoder_pass %s, pass2 %s\n", info.encoder_pass, pass2);
+					sock_write_line(con->sock, "ERROR - Bad Password\r\n");
+					kick_connection(con, "Bad Password");
+					return;
+				}
+				else
+					password_accepted = 1;
+			}
+		}
 	} while ((go_on > 0) && connected);
 
-    if (password_accepted == 0) {
-         xa_debug (2, "KUN DEBUG: info.encoder_pass %s\n", info.encoder_pass);
-         sock_write_line (con->sock, "ERROR - Bad Password\r\n");
-         kick_connection (con, "Bad Password");
-    }
-	
-	if (!source->source_agent) {
-		sock_write_line (con->sock, "Not authorized (no NTRIP source)\r\n");
-		kick_connection (con, "No NTRIP source");
+	if (password_accepted == 0)
+	{
+		xa_debug(2, "KUN DEBUG: info.encoder_pass %s\n", info.encoder_pass);
+		sock_write_line(con->sock, "ERROR - Bad Password\r\n");
+		kick_connection(con, "Bad Password");
+	}
+
+	if (!source->source_agent)
+	{
+		sock_write_line(con->sock, "Not authorized (no NTRIP source)\r\n");
+		kick_connection(con, "No NTRIP source");
 		return;
 	}
 
-	if (connected) {
+	if (connected)
+	{
 
 		if ((info.num_sources + 1) > info.max_sources)
 		{
-			sock_write_line (con->sock, "ERROR - Too many sources\r\n");
-			kick_connection (con, "Server Full (too many streams)");
+			sock_write_line(con->sock, "ERROR - Too many sources\r\n");
+			kick_connection(con, "Server Full (too many streams)");
 			return;
 		}
 
-		add_source ();
-		sock_write_line (con->sock, "OK");
+		add_source();
+		sock_write_line(con->sock, "OK");
 		source->connected = SOURCE_CONNECTED;
 
-		write_log (LOG_DEFAULT, "Accepted encoder on mountpoint %s from %s. %d sources connected",
-			   source->audiocast.mount, con_host (con), info.num_sources);
+		write_log(LOG_DEFAULT, "Accepted encoder on mountpoint %s from %s. %d sources connected",
+				  source->audiocast.mount, con_host(con), info.num_sources);
 
 		thread_mutex_lock(&info.source_mutex);
 		avl_insert(info.sources, con);
 		thread_mutex_unlock(&info.source_mutex);
 
-			/* change thread name */
+		/* change thread name */
 		thread_rename("Source Thread");
 		source_func(con);
 	}
 
-	write_log (LOG_DEFAULT, "WARNING: Thread exiting in source_login(), this should not happen");
+	write_log(LOG_DEFAULT, "WARNING: Thread exiting in source_login(), this should not happen");
 	thread_exit(0);
 }
 
@@ -284,61 +304,62 @@ source_func(void *conarg)
 	con->food.source->thread = thread_self();
 	thread_init();
 
-	mt = thread_get_mythread ();
+	mt = thread_get_mythread();
 
 	sock_set_blocking(con->sock, SOCK_NONBLOCK);
 
-	while (thread_alive (mt) && ((source->connected == SOURCE_CONNECTED) || (source->connected == SOURCE_PAUSED)))
+	while (thread_alive(mt) && ((source->connected == SOURCE_CONNECTED) || (source->connected == SOURCE_PAUSED)))
 	{
-		source_get_new_clients (source);
+		source_get_new_clients(source);
 
 		add_chunk(con);
 
-		for (i = 0; i < 10; i++) {
-			
+		for (i = 0; i < 10; i++)
+		{
+
 			if (source->connected != SOURCE_CONNECTED)
 				break;
 
 			thread_mutex_lock(&source->mutex);
-			
-			zero_trav (&trav);
-			
-			while ((clicon = avl_traverse(source->clients, &trav)) != NULL) {
-			  
+
+			zero_trav(&trav);
+
+			while ((clicon = avl_traverse(source->clients, &trav)) != NULL)
+			{
+
 				if (source->connected == SOURCE_KILLED || source->connected == SOURCE_PAUSED)
 					break;
-				
-				source_write_to_client (source, clicon);
 
+				source_write_to_client(source, clicon);
 			}
-			
+
 			thread_mutex_unlock(&source->mutex);
 
 			if (mt->ping == 1)
 				mt->ping = 0;
 		}
 
-		thread_mutex_lock (&info.double_mutex);
+		thread_mutex_lock(&info.double_mutex);
 
-		thread_mutex_lock (&source->mutex);
-		kick_dead_clients (source);
-		thread_mutex_unlock (&source->mutex);
+		thread_mutex_lock(&source->mutex);
+		kick_dead_clients(source);
+		thread_mutex_unlock(&source->mutex);
 
 		thread_mutex_unlock(&info.double_mutex);
 	}
 
-	thread_mutex_lock (&info.double_mutex);
-	thread_mutex_lock (&info.source_mutex);
-	thread_mutex_lock (&source->mutex);
-	
-	source_get_new_clients (source);
+	thread_mutex_lock(&info.double_mutex);
+	thread_mutex_lock(&info.source_mutex);
+	thread_mutex_lock(&source->mutex);
 
-	close_connection (con, &info);
+	source_get_new_clients(source);
 
-	thread_mutex_unlock (&info.source_mutex);
-	thread_mutex_unlock (&info.double_mutex);
+	close_connection(con, &info);
 
-	thread_exit (0);
+	thread_mutex_unlock(&info.source_mutex);
+	thread_mutex_unlock(&info.double_mutex);
+
+	thread_exit(0);
 	return NULL;
 }
 
@@ -346,26 +367,25 @@ source_t *
 create_source()
 {
 	source_t *source = (source_t *)nmalloc(sizeof(source_t));
-	memset(source,0,sizeof(source_t));
+	memset(source, 0, sizeof(source_t));
 	source->type = unknown_source_e;
 	return source;
 }
 
-void 
-put_source(connection_t *con)
+void put_source(connection_t *con)
 {
 	register int i;
 	socklen_t sin_len;
 	source_t *source = create_source();
 
 	con->food.source = source;
-	zero_stats (&source->stats);
+	zero_stats(&source->stats);
 	source->connected = SOURCE_UNUSED;
 	source->type = unknown_source_e;
 	thread_create_mutex(&source->mutex);
 	source->audiocast.mount = NULL;
 	source->cid = 0;
-	source->clients = avl_create (compare_connection, &info);
+	source->clients = avl_create(compare_connection, &info);
 	source->num_clients = 0;
 	source->priority = 0;
 	source->source_agent = NULL;
@@ -381,22 +401,20 @@ put_source(connection_t *con)
 	con->type = source_e;
 }
 
-void
-add_source ()
+void add_source()
 {
 	info.num_sources++;
 	info.hourly_stats.source_connections++;
 }
 
-void
-del_source ()
+void del_source()
 {
 	info.num_sources--;
 }
 
 /* Must have mount, source and double mutex to call this */
 connection_t *
-find_mount_with_req (request_t *req)
+find_mount_with_req(request_t *req)
 {
 	char tempbuf[256] = "";
 
@@ -405,42 +423,44 @@ find_mount_with_req (request_t *req)
 	int true = 0;
 
 	avl_traverser trav = {0};
-	
+
 	if (!req || !req->path || !req->host)
 	{
-		write_log (LOG_DEFAULT, "WARNING: find_mount_with_req called with NULL request!");
+		write_log(LOG_DEFAULT, "WARNING: find_mount_with_req called with NULL request!");
 		return NULL;
 	}
 
-	xa_debug (1, "DEBUG: Looking for [%s] on host [%s] on port %d", req->path, req->host, req->port);
-	
-	while ((con = avl_traverse(info.sources, &trav)) != NULL) 
+	xa_debug(1, "DEBUG: Looking for [%s] on host [%s] on port %d", req->path, req->host, req->port);
+
+	while ((con = avl_traverse(info.sources, &trav)) != NULL)
 	{
 		true = 0;
 
 		xa_debug(2, "DEBUG: Looking on mount [%s]", con->food.source->audiocast.mount);
 
-        if (con->food.source->audiocast.mount[0] == '/') {
-            if (	(ice_strcmp(con->food.source->audiocast.mount, req->path) == 0) ||
-                (ice_strcmp(tempbuf, req->path) == 0)
-            ) true = 1;
-        } else {
-            if (	(ice_strcmp(con->food.source->audiocast.mount, req->path + 1) == 0) ||
-                (ice_strcmp(tempbuf, req->path + 1) == 0)
-            ) true = 1;
-        }
+		if (con->food.source->audiocast.mount[0] == '/')
+		{
+			if ((ice_strcmp(con->food.source->audiocast.mount, req->path) == 0) ||
+				(ice_strcmp(tempbuf, req->path) == 0))
+				true = 1;
+		}
+		else
+		{
+			if ((ice_strcmp(con->food.source->audiocast.mount, req->path + 1) == 0) ||
+				(ice_strcmp(tempbuf, req->path + 1) == 0))
+				true = 1;
+		}
 
-        if (true) {
-            xa_debug(1, "DEBUG: Found local mount for [%s]", req->path);
-            return con;
-        } 
-
+		if (true)
+		{
+			xa_debug(1, "DEBUG: Found local mount for [%s]", req->path);
+			return con;
+		}
 	}
 	return NULL;
 }
 
-void
-add_chunk (connection_t *con)
+void add_chunk(connection_t *con)
 {
 	int read_bytes;
 	int len;
@@ -449,125 +469,142 @@ add_chunk (connection_t *con)
 	if (con->food.source->chunk[con->food.source->cid].clients_left > 0)
 	{
 #ifndef OPTIMIZE
-		xa_debug (2, "DEBUG: Kicking trailing clients [%d] on id %d", con->food.source->chunk[con->food.source->cid].clients_left, 
-			con->food.source->cid);
+		xa_debug(2, "DEBUG: Kicking trailing clients [%d] on id %d", con->food.source->chunk[con->food.source->cid].clients_left,
+				 con->food.source->cid);
 #endif
-		thread_mutex_lock (&info.double_mutex);
-		thread_mutex_lock (&con->food.source->mutex);
+		thread_mutex_lock(&info.double_mutex);
+		thread_mutex_lock(&con->food.source->mutex);
 
-		kick_clients_on_cid (con->food.source);
+		kick_clients_on_cid(con->food.source);
 
-		thread_mutex_unlock (&con->food.source->mutex);
-		thread_mutex_unlock (&info.double_mutex);
+		thread_mutex_unlock(&con->food.source->mutex);
+		thread_mutex_unlock(&info.double_mutex);
 	}
-	
+
 	len = 0;
 	read_bytes = 0;
 	tries = 0;
 
-	do {
+	do
+	{
 		errno = 0;
 #ifdef _WIN32
-	        sock_set_blocking(con->sock, SOCK_BLOCK);
+		sock_set_blocking(con->sock, SOCK_BLOCK);
 #endif
 
 		len = recv(con->sock, con->food.source->chunk[con->food.source->cid].data + read_bytes, SOURCE_READSIZE - read_bytes, 0);
-		
-		xa_debug (5, "DEBUG: Source received %d bytes in try %d, total %d, errno: %d", len, tries, read_bytes, errno);
+
+		xa_debug(5, "DEBUG: Source received %d bytes in try %d, total %d, errno: %d", len, tries, read_bytes, errno);
 
 #ifdef _WIN32
 		sock_set_blocking(con->sock, SOCK_NONBLOCK);
 #endif
-		
+
 		if (con->food.source->connected == SOURCE_KILLED)
 			return;
-		
-		if ((len == 0) || ((len == -1) && (!is_recoverable(errno)))) {
-			if (info.client_timeout > 0 && con->food.source->connected != SOURCE_KILLED) {
+
+		if ((len == 0) || ((len == -1) && (!is_recoverable(errno))))
+		{
+			if (info.client_timeout > 0 && con->food.source->connected != SOURCE_KILLED)
+			{
 				/* Set this source as pending (not connected) */
-				pending_connection (con);
-				
+				pending_connection(con);
+
 				/* Sleep for client_timeout seconds. If during that time this source is set to
 				SOURCE_KILLED, return false */
 
-				if (pending_source_signoff (con))
+				if (pending_source_signoff(con))
 				{
-					thread_mutex_lock (&info.double_mutex);
-					thread_mutex_lock (&con->food.source->mutex);
-					kick_connection (con, "Client timeout exceeded, removing source");
-					thread_mutex_unlock (&con->food.source->mutex);
-					thread_mutex_unlock (&info.double_mutex);
-					return;
-				} else {
-					thread_mutex_lock (&info.double_mutex);
-					thread_mutex_lock (&con->food.source->mutex);
-					kick_connection (con, "Lost all clients to new source");
-					thread_mutex_unlock (&con->food.source->mutex);
-					thread_mutex_unlock (&info.double_mutex);
+					thread_mutex_lock(&info.double_mutex);
+					thread_mutex_lock(&con->food.source->mutex);
+					kick_connection(con, "Client timeout exceeded, removing source");
+					thread_mutex_unlock(&con->food.source->mutex);
+					thread_mutex_unlock(&info.double_mutex);
 					return;
 				}
-			} else {
-				thread_mutex_lock (&info.double_mutex);
-				thread_mutex_lock (&con->food.source->mutex);
-				kick_connection (con, "Source signed off (killed itself)");
-				thread_mutex_unlock (&con->food.source->mutex);
-				thread_mutex_unlock (&info.double_mutex);
+				else
+				{
+					thread_mutex_lock(&info.double_mutex);
+					thread_mutex_lock(&con->food.source->mutex);
+					kick_connection(con, "Lost all clients to new source");
+					thread_mutex_unlock(&con->food.source->mutex);
+					thread_mutex_unlock(&info.double_mutex);
+					return;
+				}
+			}
+			else
+			{
+				thread_mutex_lock(&info.double_mutex);
+				thread_mutex_lock(&con->food.source->mutex);
+				kick_connection(con, "Source signed off (killed itself)");
+				thread_mutex_unlock(&con->food.source->mutex);
+				thread_mutex_unlock(&info.double_mutex);
 				return;
 			}
-		} else if (len > 0) {
+		}
+		else if (len > 0)
+		{
 			read_bytes += len;
 			stat_add_read(&con->food.source->stats, len);
 			info.hourly_stats.read_bytes += len;
-		} else {
+		}
+		else
+		{
 			my_sleep(READ_RETRY_DELAY * 1000);
 		}
 
 		tries++;
-		
-	} while ((((double)read_bytes < ((double)SOURCE_READSIZE*3.0)/4.0) && (tries < (READ_TIMEOUT / READ_RETRY_DELAY))));
 
-	if (read_bytes <= 0) {
+	} while ((((double)read_bytes < ((double)SOURCE_READSIZE * 3.0) / 4.0) && (tries < (READ_TIMEOUT / READ_RETRY_DELAY))));
+
+	if (read_bytes <= 0)
+	{
 		write_log(LOG_DEFAULT, "Didn't receive data from source after %d microseconds, assuming it died...", tries * READ_RETRY_DELAY);
-		
+
 		/* Set this source as pending (not connected) */
-		pending_connection (con);
-		
-		if (info.client_timeout > 0) {
+		pending_connection(con);
+
+		if (info.client_timeout > 0)
+		{
 			/* Sleep for client_timeout seconds. If during that time this source is set to SOURCE_KILLED, return false */
-			if (pending_source_signoff(con)) {
-				thread_mutex_lock (&info.double_mutex);
+			if (pending_source_signoff(con))
+			{
+				thread_mutex_lock(&info.double_mutex);
 				thread_mutex_lock(&con->food.source->mutex);
 				kick_connection(con, "Client timeout exceeded, removing source");
 				thread_mutex_unlock(&con->food.source->mutex);
-				thread_mutex_unlock (&info.double_mutex);
+				thread_mutex_unlock(&info.double_mutex);
 				return;
-			} else {
+			}
+			else
+			{
 				thread_mutex_lock(&con->food.source->mutex);
 				kick_connection(con, "Lost all clients to new source");
 				thread_mutex_unlock(&con->food.source->mutex);
 				return;
 			}
-		} else {
-			thread_mutex_lock (&info.double_mutex);
+		}
+		else
+		{
+			thread_mutex_lock(&info.double_mutex);
 			thread_mutex_lock(&con->food.source->mutex);
 			kick_connection(con, "Source died");
 			thread_mutex_unlock(&con->food.source->mutex);
-			thread_mutex_unlock (&info.double_mutex);
+			thread_mutex_unlock(&info.double_mutex);
 			return;
 		}
 	}
 
 #ifndef OPTIMIZE
-	xa_debug (4, "-------add_chunk: Chunk %d was [%d] bytes", con->food.source->cid, read_bytes );
+	xa_debug(4, "-------add_chunk: Chunk %d was [%d] bytes", con->food.source->cid, read_bytes);
 #endif
-	
+
 	con->food.source->chunk[con->food.source->cid].len = read_bytes;
 	con->food.source->chunk[con->food.source->cid].clients_left = con->food.source->num_clients;
 	con->food.source->cid = (con->food.source->cid + 1) % CHUNKLEN;
 }
 
-void
-write_chunk(source_t *source, connection_t *clicon)
+void write_chunk(source_t *source, connection_t *clicon)
 {
 	int i = 0;
 	long int write_bytes = 0, len = 0;
@@ -580,169 +617,173 @@ write_chunk(source_t *source, connection_t *clicon)
 
 		/* This is how much we should be writing to the client */
 		len = source->chunk[clicon->food.client->cid].len - clicon->food.client->offset;
-		
-		xa_debug (5, "DEBUG: write_chunk(): Try: %d, writing chunk %d to client %d, len(%d) - offset(%d) == %d", i, clicon->food.client->cid, clicon->id, 
-			  source->chunk[clicon->food.client->cid].len, clicon->food.client->offset, len);
-		
+
+		xa_debug(5, "DEBUG: write_chunk(): Try: %d, writing chunk %d to client %d, len(%d) - offset(%d) == %d", i, clicon->food.client->cid, clicon->id,
+				 source->chunk[clicon->food.client->cid].len, clicon->food.client->offset, len);
+
 		if (len < 0 || source->chunk[clicon->food.client->cid].len == 0)
 		{
 #ifndef OPTIMIZE
-			xa_debug (5, "DEBUG: write_chunk: Empty chunk [%d] [%d]", source->chunk[clicon->food.client->cid].len,
-				  clicon->food.client->offset );
+			xa_debug(5, "DEBUG: write_chunk: Empty chunk [%d] [%d]", source->chunk[clicon->food.client->cid].len,
+					 clicon->food.client->offset);
 #endif
 			source->chunk[clicon->food.client->cid].clients_left--;
 			clicon->food.client->cid = (clicon->food.client->cid + 1) % CHUNKLEN;
 			clicon->food.client->offset = 0;
 			continue; /* Perhaps for some reason the source read a zero sized chunk but the next one is ok */
-		} 
-		
-		write_bytes = write_data (clicon, source);
+		}
+
+		write_bytes = write_data(clicon, source);
 
 		if (write_bytes < 0)
 		{
 #ifndef OPTIMIZE
-			xa_debug (5, "DEBUG: client: [%2d] errors: [%3d]", clicon->id, client_errors (clicon->food.client));
+			xa_debug(5, "DEBUG: client: [%2d] errors: [%3d]", clicon->id, client_errors(clicon->food.client));
 #endif
-			if (is_recoverable (0 - write_bytes))
+			if (is_recoverable(0 - write_bytes))
 				continue;
 			break; /* Safe to assume that the client is kicked out due to socket error */
 		}
 
 		clicon->food.client->write_bytes += write_bytes;
 		info.hourly_stats.write_bytes += write_bytes;
-		stat_add_write (&source->stats, write_bytes);
-		
-		if (write_bytes + clicon->food.client->offset >= source->chunk[clicon->food.client->cid].len) {
+		stat_add_write(&source->stats, write_bytes);
+
+		if (write_bytes + clicon->food.client->offset >= source->chunk[clicon->food.client->cid].len)
+		{
 			source->chunk[clicon->food.client->cid].clients_left--;
 			clicon->food.client->cid = (clicon->food.client->cid + 1) % CHUNKLEN;
 			clicon->food.client->offset = 0;
-		} else {
-			
+		}
+		else
+		{
+
 			clicon->food.client->offset += write_bytes;
 #ifndef OPTIMIZE
-			xa_debug (5, "DEBUG: client %d only read %d of %d bytes", clicon->id, write_bytes, 
-				  source->chunk[clicon->food.client->cid].len - clicon->food.client->offset);
+			xa_debug(5, "DEBUG: client %d only read %d of %d bytes", clicon->id, write_bytes,
+					 source->chunk[clicon->food.client->cid].len - clicon->food.client->offset);
 #endif
 		}
 	}
-	
-	xa_debug (4, "DEBUG: client %d tried %d times, now has %d errors %d chunks behind source", clicon->id, i,
-		  client_errors (clicon->food.client), source->cid < clicon->food.client->cid ? source->cid+CHUNKLEN - clicon->food.client->cid : source->cid - clicon->food.client->cid);
-	
+
+	xa_debug(4, "DEBUG: client %d tried %d times, now has %d errors %d chunks behind source", clicon->id, i,
+			 client_errors(clicon->food.client), source->cid < clicon->food.client->cid ? source->cid + CHUNKLEN - clicon->food.client->cid : source->cid - clicon->food.client->cid);
+
 	if (clicon->food.client->alive == CLIENT_DEAD)
 		return;
 }
 
-void 
-kick_clients_on_cid(source_t *source)
+void kick_clients_on_cid(source_t *source)
 {
 	avl_traverser trav = {0};
 	connection_t *clicon;
 
-	unsigned int max = avl_count (source->clients) * avl_count (source->clients) + 2;
+	unsigned int max = avl_count(source->clients) * avl_count(source->clients) + 2;
 
-	xa_debug (3, "Clearing cid %d", source->cid);
+	xa_debug(3, "Clearing cid %d", source->cid);
 
-	zero_trav (&trav);
+	zero_trav(&trav);
 
 #if !defined(SAVE_CPU) || !defined(OPTIMIZE)
-	xa_debug (5, "DEBUG: In function kick_clients_on_cid. Source has %d clients", max);
+	xa_debug(5, "DEBUG: In function kick_clients_on_cid. Source has %d clients", max);
 #endif
 	while (max >= 0)
 	{
-		clicon = avl_traverse (source->clients, &trav);
+		clicon = avl_traverse(source->clients, &trav);
 		if (!clicon)
 			break;
-		
-		if (client_errors (clicon->food.client) >= (CHUNKLEN - 1) && clicon->food.client->alive != CLIENT_DEAD)
-		    
+
+		if (client_errors(clicon->food.client) >= (CHUNKLEN - 1) && clicon->food.client->alive != CLIENT_DEAD)
+
 		{
-			kick_connection (clicon, "Client cannot sustain sufficient bandwidth");
-			zero_trav (&trav); /* Start from the top of the tree */
+			kick_connection(clicon, "Client cannot sustain sufficient bandwidth");
+			zero_trav(&trav); /* Start from the top of the tree */
 		}
 		max--;
 	}
 	source->chunk[source->cid].clients_left = 0;
 #if !defined(SAVE_CPU) || !defined(OPTIMIZE)
-	xa_debug (5, "DEBUG: leaving function kick_clients_on_cid");
+	xa_debug(5, "DEBUG: leaving function kick_clients_on_cid");
 #endif
 }
 
-/* 
+/*
  * Can't be removing clients inside the loop which handles all the
- * write_chunk()s, instead we kick all the dead ones for each chunk. 
+ * write_chunk()s, instead we kick all the dead ones for each chunk.
  */
-void 
-kick_dead_clients(source_t *source)
+void kick_dead_clients(source_t *source)
 {
 	avl_traverser trav = {0};
 	connection_t *clicon = NULL;
 
-	int max = avl_count (source->clients) * avl_count (source->clients) + 2;
-	
+	int max = avl_count(source->clients) * avl_count(source->clients) + 2;
+
 #if !defined(SAVE_CPU) || !defined(OPTIMIZE)
-	xa_debug (5, "DEBUG: In function kick_dead_clients. Will run %d laps", max);
+	xa_debug(5, "DEBUG: In function kick_dead_clients. Will run %d laps", max);
 #endif
 
 	/* Check for too many errors */
-	while ((clicon = avl_traverse (source->clients, &trav))) {
-		if (client_errors (clicon->food.client) >= (CHUNKLEN - 1)) {
-				kick_connection (clicon, "Too many errors (client not receiving data fast enough)");
+	while ((clicon = avl_traverse(source->clients, &trav)))
+	{
+		if (client_errors(clicon->food.client) >= (CHUNKLEN - 1))
+		{
+			kick_connection(clicon, "Too many errors (client not receiving data fast enough)");
 		}
 	}
-	
-	zero_trav (&trav);
 
-	while (max >= 0) 
+	zero_trav(&trav);
+
+	while (max >= 0)
 	{
-		clicon = avl_traverse (source->clients, &trav);
+		clicon = avl_traverse(source->clients, &trav);
 		if (!clicon)
 			break;
-		
-		if (clicon->food.client->alive == CLIENT_MOVE) {
-				kick_connection (clicon, "Smaller source stream signed off");
+
+		if (clicon->food.client->alive == CLIENT_MOVE)
+		{
+			kick_connection(clicon, "Smaller source stream signed off");
 			/* No zero_trav() here cause it's not removed from the list (close_connection() does that) */
 		}
-		
-		if (clicon->food.client->alive == CLIENT_DEAD) {
-			close_connection (clicon, &info);
-			zero_trav (&trav);
+
+		if (clicon->food.client->alive == CLIENT_DEAD)
+		{
+			close_connection(clicon, &info);
+			zero_trav(&trav);
 		}
-		
+
 		max--;
 	}
 
 #if !defined(SAVE_CPU) || !defined(OPTIMIZE)
-	xa_debug (5, "DEBUG: leaving function kick_dead_clients, %d laps left", max);
+	xa_debug(5, "DEBUG: leaving function kick_dead_clients, %d laps left", max);
 #endif
 }
 
-int
-write_data (connection_t *clicon, source_t *source)
+int write_data(connection_t *clicon, source_t *source)
 {
 	int write_bytes;
-	
+
 	if (source->chunk[clicon->food.client->cid].len - clicon->food.client->offset <= 0)
 		return 0;
-	
-	write_bytes = sock_write_bytes_or_kick(clicon->sock, clicon, &source->chunk[clicon->food.client->cid].data[clicon->food.client->offset], 
-					       source->chunk[clicon->food.client->cid].len - clicon->food.client->offset);
-	
+
+	write_bytes = sock_write_bytes_or_kick(clicon->sock, clicon, &source->chunk[clicon->food.client->cid].data[clicon->food.client->offset],
+										   source->chunk[clicon->food.client->cid].len - clicon->food.client->offset);
+
 #ifndef OPTIMIZE
-	xa_debug (4, "DEBUG: client %d in write_data(). Function write() returned %d of %d bytes, client on chunk %d (+%d), source on chunk %d", clicon->id, write_bytes,
-		  source->chunk[clicon->food.client->cid].len - clicon->food.client->offset, clicon->food.client->cid, clicon->food.client->offset,
-		  source->cid);
+	xa_debug(4, "DEBUG: client %d in write_data(). Function write() returned %d of %d bytes, client on chunk %d (+%d), source on chunk %d", clicon->id, write_bytes,
+			 source->chunk[clicon->food.client->cid].len - clicon->food.client->offset, clicon->food.client->cid, clicon->food.client->offset,
+			 source->cid);
 #endif
 	if (write_bytes < 0)
 		return 0 - errno;
 	return write_bytes;
 }
 
-const char source_protos[2][12] = { "icy", "x-audiocast" };
-const char source_types[5][16] = { "encoder", "pulling relay", "on demand relay", "file transfer", "unknown source" };
+const char source_protos[2][12] = {"icy", "x-audiocast"};
+const char source_types[5][16] = {"encoder", "pulling relay", "on demand relay", "file transfer", "unknown source"};
 
 const char *
-sourcetype_to_string (source_type_t type)
+sourcetype_to_string(source_type_t type)
 {
 	return source_types[type];
 }
@@ -752,55 +793,55 @@ sourcetype_to_string (source_type_t type)
  * from both his own slow network connection and discrepanices
  * in the source feed.
  */
-int
-start_chunk (source_t *source)
+int start_chunk(source_t *source)
 {
 	return source->cid > 0 ? source->cid - 1 : CHUNKLEN - 1;
 }
 
-void
-source_write_to_client (source_t *source, connection_t *clicon)
+void source_write_to_client(source_t *source, connection_t *clicon)
 {
 	client_t *client;
 
-	if (!clicon || !source) {
-		xa_debug (1, "WARNING: source_write_to_client() called with NULL pointers");
+	if (!clicon || !source)
+	{
+		xa_debug(1, "WARNING: source_write_to_client() called with NULL pointers");
 		return;
 	}
-	
+
 	client = clicon->food.client;
 
 	if (client->alive == CLIENT_DEAD)
 		return;
-	
+
 	if (client->virgin == CLIENT_PAUSED || client->virgin == -1)
 		return;
-	
-	if (client->virgin == CLIENT_UNPAUSED)	{
-		client->cid = start_chunk (source);
-		client->offset = find_frame_ofs (source);
+
+	if (client->virgin == CLIENT_UNPAUSED)
+	{
+		client->cid = start_chunk(source);
+		client->offset = find_frame_ofs(source);
 		client->virgin = 0;
 	}
-	
-	if (client->virgin == 1) {
-		client->cid = start_chunk (source); 
+
+	if (client->virgin == 1)
+	{
+		client->cid = start_chunk(source);
 		client->offset = find_frame_ofs(source);
-		xa_debug (2, "Client got offset %d", client->offset);
+		xa_debug(2, "Client got offset %d", client->offset);
 		client->virgin = 0;
 		source->num_clients = source->num_clients + (unsigned long int)1;
 	}
-	
-  write_chunk (source, clicon);
+
+	write_chunk(source, clicon);
 }
 
-void
-source_get_new_clients (source_t *source)
+void source_get_new_clients(source_t *source)
 {
 	connection_t *clicon;
-	
-	while ((clicon = pool_get_my_clients (source))) {
-		xa_debug (1, "DEBUG: source_get_new_clients(): Accepted client %d", clicon->id);
-		avl_insert (source->clients, clicon);
+
+	while ((clicon = pool_get_my_clients(source)))
+	{
+		xa_debug(1, "DEBUG: source_get_new_clients(): Accepted client %d", clicon->id);
+		avl_insert(source->clients, clicon);
 	}
 }
-

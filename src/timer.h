@@ -51,11 +51,10 @@ void update_total_statistics(statistics_t *stat);
 void write_daily_stats(statistics_t *stat);
 void zero_stats(statistics_t *stat);
 void get_current_stats(statistics_t *stat);
-void get_current_stats_proc (statistics_t *stat, int lock);
+void get_current_stats_proc(statistics_t *stat, int lock);
 void get_running_stats(statistics_t *stat);
-void get_running_stats_proc (statistics_t *stat, int lock);
+void get_running_stats_proc(statistics_t *stat, int lock);
 void add_stats(statistics_t *target, statistics_t *source, unsigned long int factor);
-void timer_handle_status_lines (time_t stime);
-void timer_handle_transfer_statistics (time_t stime, time_t *trottime, time_t *justone, statistics_t *trotstat);
+void timer_handle_status_lines(time_t stime);
+void timer_handle_transfer_statistics(time_t stime, time_t *trottime, time_t *justone, statistics_t *trotstat);
 #endif
-

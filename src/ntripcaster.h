@@ -98,15 +98,15 @@
 #define DEFAULT_CONSOLE_MODE 0
 #define DEFAULT_NTRIP_VERSION "1.0"
 
-#if defined (SOLARIS) && defined (HAVE_GETHOSTBYNAME_R) && defined (HAVE_GETHOSTBYADDR_R)
-# define DEFAULT_RESOLV_TYPE solaris_gethostbyname_r_e
-# define SOLARIS_RESOLV_OK 1
-#elif defined (LINUX) && defined (HAVE_GETHOSTBYNAME_R) && defined (HAVE_GETHOSTBYADDR_R)
-# define DEFAULT_RESOLV_TYPE linux_gethostbyname_r_e
-# define LINUX_RESOLV_OK 1
+#if defined(SOLARIS) && defined(HAVE_GETHOSTBYNAME_R) && defined(HAVE_GETHOSTBYADDR_R)
+#define DEFAULT_RESOLV_TYPE solaris_gethostbyname_r_e
+#define SOLARIS_RESOLV_OK 1
+#elif defined(LINUX) && defined(HAVE_GETHOSTBYNAME_R) && defined(HAVE_GETHOSTBYADDR_R)
+#define DEFAULT_RESOLV_TYPE linux_gethostbyname_r_e
+#define LINUX_RESOLV_OK 1
 #else
-# define DEFAULT_RESOLV_TYPE standard_gethostbyname_e
-# define DEFAULT_RESOLV_OK 1
+#define DEFAULT_RESOLV_TYPE standard_gethostbyname_e
+#define DEFAULT_RESOLV_OK 1
 #endif
 
 #define SOCK_UNUSED -1
@@ -122,12 +122,12 @@
 #define CLIENT_UNPAUSED 4
 #define CLIENT_MOVE 5
 #undef DEBUG_MEMORY
-#undef DEBUG_MEMORY_MCHECK 
+#undef DEBUG_MEMORY_MCHECK
 #undef DEBUG_MUTEXES
 #undef DEBUG_SOCKETS
 #undef DEBUG_SLEEP
-#undef DEBUG_FULL 
-//#define DEBUG_FULL 1
+#undef DEBUG_FULL
+// #define DEBUG_FULL 1
 #undef OPTIMIZE
 #undef SAVE_CPU
 #define LOG_DEFAULT 0
@@ -138,23 +138,57 @@
 #ifndef __ICECAST_TYPES_H
 #define __ICECAST_TYPES_H
 
-typedef enum {listener_e = 0, pulling_client_e = 2, unknown_client_e = -1 } client_type_t;
-typedef enum {icy_e = 0 } protocol_t;
-typedef enum {encoder_e = 0, puller_e = 1, on_demand_pull_e = 2, unknown_source_e = -1 } source_type_t;
-typedef enum contype_e {client_e = 0, source_e = 1, unknown_connection_e = 3 } contype_t;
-typedef enum { conf_file_e = 1, log_file_e = 2 } filetype_t;
-typedef enum { linux_gethostbyname_r_e = 1, solaris_gethostbyname_r_e = 2, standard_gethostbyname_e = 3 } resolv_type_t;
+typedef enum
+{
+	listener_e = 0,
+	pulling_client_e = 2,
+	unknown_client_e = -1
+} client_type_t;
+typedef enum
+{
+	icy_e = 0
+} protocol_t;
+typedef enum
+{
+	encoder_e = 0,
+	puller_e = 1,
+	on_demand_pull_e = 2,
+	unknown_source_e = -1
+} source_type_t;
+typedef enum contype_e
+{
+	client_e = 0,
+	source_e = 1,
+	unknown_connection_e = 3
+} contype_t;
+typedef enum
+{
+	conf_file_e = 1,
+	log_file_e = 2
+} filetype_t;
+typedef enum
+{
+	linux_gethostbyname_r_e = 1,
+	solaris_gethostbyname_r_e = 2,
+	standard_gethostbyname_e = 3
+} resolv_type_t;
 typedef int icecast_function();
 typedef avl_tree vartree_t;
 typedef int wid_t;
-typedef enum type_e {integer_e, real_e, string_e, function_e} type_t;
+typedef enum type_e
+{
+	integer_e,
+	real_e,
+	string_e,
+	function_e
+} type_t;
 
 #define BUFSIZE 1000
 #define CHUNKLEN 64
 #define MAXMETADATALENGTH (100)
 #define SOURCE_BUFFSIZE 1000
 #define SOURCE_READSIZE (100)
-#define MAXLISTEN 5		/* max number of listening ports */
+#define MAXLISTEN 5 /* max number of listening ports */
 
 #ifndef HAVE_SOCKLEN_T
 typedef int mysocklen_t;
@@ -175,11 +209,12 @@ typedef int sock_t;
 typedef sock_t SOCKET;
 #endif
 
-//add for auto change mount point
-typedef struct {
-    double lat;
-    double lng;
-    double height;
+// add for auto change mount point
+typedef struct
+{
+	double lat;
+	double lng;
+	double height;
 } pos_t;
 
 typedef struct varpair_St
@@ -194,7 +229,7 @@ typedef struct request_St
 	char host[BUFSIZE];
 	char user[BUFSIZE];
 	int port;
-    pos_t pos;
+	pos_t pos;
 } request_t;
 
 typedef struct chunkSt
@@ -207,64 +242,69 @@ typedef struct chunkSt
 
 typedef struct statistics_St
 {
-	unsigned long int read_bytes;   /* Bytes read from encoder(s) */
-  unsigned long int read_kilos;   /* Kilos read from encoder(s) */
-	unsigned long int write_bytes;  /* Bytes written to client(s) */
-  unsigned long int write_kilos;  /* Kilos written to client(s) */
-	unsigned long int client_connections; /* Number of connects from clients */
-	unsigned long int source_connections; /* Number of connects from sources */
+	unsigned long int read_bytes;		   /* Bytes read from encoder(s) */
+	unsigned long int read_kilos;		   /* Kilos read from encoder(s) */
+	unsigned long int write_bytes;		   /* Bytes written to client(s) */
+	unsigned long int write_kilos;		   /* Kilos written to client(s) */
+	unsigned long int client_connections;  /* Number of connects from clients */
+	unsigned long int source_connections;  /* Number of connects from sources */
 	unsigned long int client_connect_time; /* Total sum of the time each client has been connected (minutes) */
 	unsigned long int source_connect_time; /* Total sum of the time each source has been connected (minutes) */
 } statistics_t;
 
-typedef struct audiocast_St {
-	char *name; //		 Name of Server
-	char *mount;	//	 Name of source
+typedef struct audiocast_St
+{
+	char *name;	 //		 Name of Server
+	char *mount; //	 Name of source
 } audiocast_t;
 
-typedef struct source_St {
+typedef struct source_St
+{
 	int connected;
 	source_type_t type;
 	protocol_t protocol;
 	mutex_t mutex;
 	audiocast_t audiocast;
-	avl_tree *clients;             /* Tree of clients */
-	icethread_t thread;              /* Pointer to running thread */
+	avl_tree *clients;	/* Tree of clients */
+	icethread_t thread; /* Pointer to running thread */
 	statistics_t stats;
 	unsigned long int num_clients;
 	chunk_t chunk[CHUNKLEN];
 	int cid;
 	int priority;
 	char *source_agent;
-    pos_t pos;   //add for gpgga
+	pos_t pos; // add for gpgga
 
 } source_t;
 
-typedef struct client_St {
-	unsigned int use_udp:1;
-	unsigned int use_icy:1;
- 	int errors;             /* Used at first to mark position in buf, later to mark error */
+typedef struct client_St
+{
+	unsigned int use_udp : 1;
+	unsigned int use_icy : 1;
+	int errors; /* Used at first to mark position in buf, later to mark error */
 	int offset;
 	int cid;
 	int alive;
 	client_type_t type;
-	unsigned long int write_bytes;	/* Number of bytes written to client */
+	unsigned long int write_bytes; /* Number of bytes written to client */
 	int virgin;
-	source_t *source;        /* Pointer back to the source */
-	int data_send_times; //add for auto change station
+	source_t *source;	 /* Pointer back to the source */
+	int data_send_times; // add for auto change station
 	mutex_t mutex;
 	icethread_t thread;
 	pos_t pos;
-    pos_t last_change_pos;
+	pos_t last_change_pos;
 } client_t;
 
-typedef struct connectionSt {
+typedef struct connectionSt
+{
 	contype_t type;
-	union {
+	union
+	{
 		client_t *client;
 		source_t *source;
 	} food;
-	unsigned long int id;  /* Session unique connection id */
+	unsigned long int id; /* Session unique connection id */
 	struct sockaddr_in *sin;
 	mysocklen_t sinlen;
 	SOCKET sock;
@@ -275,26 +315,27 @@ typedef struct connectionSt {
 	char *user;
 } connection_t;
 
-typedef struct {
-	char *runpath;			/* argv[0] */
+typedef struct
+{
+	char *runpath; /* argv[0] */
 	int port[MAXLISTEN];
-	SOCKET listen_sock[MAXLISTEN];	/* Socket to listen to */
-	char *etcdir;		/* Name of config file directory */
+	SOCKET listen_sock[MAXLISTEN]; /* Socket to listen to */
+	char *etcdir;				   /* Name of config file directory */
 	char *logdir;
 	avl_tree *sources;
 	unsigned long int num_sources;
 	unsigned long int max_sources;
-	char *encoder_pass;	/* Password to verify encoder */
+	char *encoder_pass; /* Password to verify encoder */
 	char *configfile;	/* Name of configuration file */
 	char *mountfile;
-	char *logfilename;	/* Name of default log file */
-  int logfile;		/* File descriptor for the logfile */
-	time_t statslasttime;	
+	char *logfilename; /* Name of default log file */
+	int logfile;	   /* File descriptor for the logfile */
+	time_t statslasttime;
 	long server_start_time; /* The time the server started */
 	time_t statuslasttime;
 	int statustime;
-	char *myhostname;	/* NULL unless bind to specific ip */
-	char *server_name;	/* Server name */
+	char *myhostname;  /* NULL unless bind to specific ip */
+	char *server_name; /* Server name */
 	char *version;
 	char *ntrip_version;
 	char *timezone;
@@ -344,11 +385,10 @@ typedef struct {
 
 	int console_mode;
 
-    char *mountposfile;
-    char *auto_mount;
-    int read_gpgga_interval;
+	char *mountposfile;
+	char *auto_mount;
+	int read_gpgga_interval;
 
 } server_info_t;
 
 #endif
-

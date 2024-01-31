@@ -66,14 +66,15 @@
 #include <fcntl.h>
 
 #ifndef _WIN32
-#include <sys/socket.h> 
+#include <sys/socket.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <netinet/in.h>
 #include <netdb.h>
-# ifdef TIME_WITH_SYS_TIME
-#  include <sys/time.h>
-# endif
+
+#ifdef TIME_WITH_SYS_TIME
+#include <sys/time.h>
+#endif
 #else
 #include <winsock.h>
 #endif
@@ -116,78 +117,81 @@ extern mutex_t sock_mutex;
 server_info_t info;
 struct in_addr localaddr;
 
-int 
-main (int argc, char **argv)
+int main(int argc, char **argv)
 {
 	/* If defined, start the memory checker */
-	initialize_memory_checker ();
+	initialize_memory_checker();
 
 	/* Setup run path and initialize memory debugging (if set) */
-	set_run_path (argv);
+	set_run_path(argv);
 
 	/* Initialize the system library mutex */
-	thread_lib_init ();
+	thread_lib_init();
 
 	/* create a new thread entry */
-	init_thread_tree (__LINE__, __FILE__);
-	
+	init_thread_tree(__LINE__, __FILE__);
+
 	/* Set all server variables to a default value */
-	setup_defaults ();
+	setup_defaults();
 
 	/* Trap some signals */
-	setup_signal_traps ();
+	setup_signal_traps();
 
 	/* Allocate client slots, source slots, etc */
-	allocate_resources ();
+	allocate_resources();
 
-	init_authentication_scheme ();
+	init_authentication_scheme();
 
-	parse_default_config_file ();
+	parse_default_config_file();
 
 	/* Initialize platform dependant network */
-	initialize_network ();
+	initialize_network();
 
- 	/* Print header, select console mode, start the main loop */
-	startup_mode ();
+	/* Print header, select console mode, start the main loop */
+	startup_mode();
 
 	return 0;
 }
 
 #ifndef _WIN32
-void 
-increase_maximum_number_of_open_files()
+void increase_maximum_number_of_open_files()
 {
-#if defined(HAVE_SETRLIMIT) && defined (HAVE_GETRLIMIT)
+#define RLIMIT_NOFILE 6 /* max number of open files */
+#if defined(HAVE_SETRLIMIT) && defined(HAVE_GETRLIMIT)
 	struct rlimit before, after;
-	
-	if (getrlimit (RLIMIT_NOFILE, &before) == 0) {
-		xa_debug (1, "DEBUG: Max number of open files: soft: %d hard: %d",
-			  (int)before.rlim_cur, (int)before.rlim_max);
-	} else {
-		xa_debug (1, "WARNING: getrlimit() failed.");
+
+	if (getrlimit(RLIMIT_NOFILE, &before) == 0)
+	{
+		xa_debug(1, "DEBUG: Max number of open files: soft: %d hard: %d",
+				 (int)before.rlim_cur, (int)before.rlim_max);
+	}
+	else
+	{
+		xa_debug(1, "WARNING: getrlimit() failed.");
 		return;
 	}
 
 	after.rlim_cur = info.max_clients + info.max_sources + 20;
 	after.rlim_max = before.rlim_max > after.rlim_cur ? before.rlim_max : after.rlim_cur;
-	
-	if (setrlimit (RLIMIT_NOFILE, &after) == 0) 
+
+	if (setrlimit(RLIMIT_NOFILE, &after) == 0)
 	{
-		xa_debug (1, "DEBUG: Max number of open files raised from: soft %d hard: %d, to soft: %d hard: %d", before.rlim_cur, before.rlim_max, after.rlim_cur, after.rlim_max);
-	} else {
-		write_log (LOG_DEFAULT, "ERROR: Increasing maximum number of open files from %d:%d to: %d:%d failed, try lowering the maximum values for listeners, admins, and sources.", before.rlim_cur, before.rlim_max, after.rlim_cur, after.rlim_max);
-		write_log (LOG_DEFAULT, "WARNING: The server will run out of file descriptors before the reaching specified limits!");
+		xa_debug(1, "DEBUG: Max number of open files raised from: soft %d hard: %d, to soft: %d hard: %d", before.rlim_cur, before.rlim_max, after.rlim_cur, after.rlim_max);
+	}
+	else
+	{
+		write_log(LOG_DEFAULT, "ERROR: Increasing maximum number of open files from %d:%d to: %d:%d failed, try lowering the maximum values for listeners, admins, and sources.", before.rlim_cur, before.rlim_max, after.rlim_cur, after.rlim_max);
+		write_log(LOG_DEFAULT, "WARNING: The server will run out of file descriptors before the reaching specified limits!");
 	}
 #endif
 }
 #endif
 
-void 
-initialize_network()
+void initialize_network()
 {
 #ifdef _WIN32
 	WSADATA wsad;
-	
+
 	/* Initialize Winsock*/
 	WSAStartup(0x0101, &wsad);
 #else
@@ -200,26 +204,27 @@ initialize_network()
 }
 
 /* Print header, select the console mode, and start the main server loop. */
-void
-startup_mode()
+void startup_mode()
 {
 	/* Try to open the log files */
 	open_log_files();
 
 	/* Write startup information in the log file, and print header on stdout */
 	write_icecast_header();
-  
+
 	/* Set the running flag */
 	running = SERVER_RUNNING;
 
 #ifdef _WIN32
-		write_log(LOG_DEFAULT, "Using stdout as NtripCaster logging window");
+	write_log(LOG_DEFAULT, "Using stdout as NtripCaster logging window");
 #else
 	if (info.console_mode == 1)
 	{
 		server_detach();
 		info.detach = 1;
-	} else {
+	}
+	else
+	{
 		write_log(LOG_DEFAULT, "Using stdout as NtripCaster logging window");
 	}
 #endif
@@ -227,20 +232,19 @@ startup_mode()
 	threaded_server_proc(&info); /* Never returns */
 }
 
-void
-setup_signal_traps()
+void setup_signal_traps()
 {
-	xa_debug (1, "DEBUG: Activating signal handler");
+	xa_debug(1, "DEBUG: Activating signal handler");
 
 #ifdef _WIN32
-	if (!SetConsoleCtrlHandler( win_sig_die, 1 ))
+	if (!SetConsoleCtrlHandler(win_sig_die, 1))
 		write_log(LOG_DEFAULT, "FAILED setting up win32 signal handler");
 #else
-	
-# if (defined(SYSV) && !defined(hpux)) || defined(SVR4)
-#  define signal sigset
-# endif
-	
+
+#if (defined(SYSV) && !defined(hpux)) || defined(SVR4)
+#define signal sigset
+#endif
+
 	signal(SIGHUP, sig_hup);
 	signal(SIGINT, sig_die);
 	signal(SIGTERM, sig_die);
@@ -250,12 +254,11 @@ setup_signal_traps()
 }
 
 /* Set all global variables to their default values */
-void 
-setup_defaults()
+void setup_defaults()
 {
 	int i;
 
-	xa_debug (1, "DEBUG: Setting up default values");
+	xa_debug(1, "DEBUG: Setting up default values");
 
 	info.consoledebuglevel = 0;
 	info.logfiledebuglevel = 0;
@@ -263,9 +266,9 @@ setup_defaults()
 
 #ifdef HAVE_UMASK
 	{
-	  mode_t before, after = 022;
-	  before = umask(after);
-	  xa_debug(1, "DEBUG: Changed umask from %d to %d", before, after);
+		mode_t before, after = 022;
+		before = umask(after);
+		xa_debug(1, "DEBUG: Changed umask from %d to %d", before, after);
 	}
 #endif
 
@@ -282,7 +285,7 @@ setup_defaults()
 #endif
 	info.resolv_type = DEFAULT_RESOLV_TYPE;
 
-	memset((void *)&localaddr, 0, sizeof (localaddr));
+	memset((void *)&localaddr, 0, sizeof(localaddr));
 
 	/* Setup main thread */
 	info.main_thread = thread_self();
@@ -304,7 +307,8 @@ setup_defaults()
 	info.id = 0;
 
 	info.port[0] = DEFAULT_PORT;
-	for (i = 1; i < MAXLISTEN; i++) {
+	for (i = 1; i < MAXLISTEN; i++)
+	{
 		info.port[i] = 0;
 	}
 
@@ -326,20 +330,23 @@ setup_defaults()
 	info.version = VERSION;
 	info.ntrip_version = DEFAULT_NTRIP_VERSION;
 	info.timezone = get_string_time(get_time(), "%Z");
-	if (!info.timezone) info.timezone = "";
+	if (!info.timezone)
+		info.timezone = "";
 
-	if (!info.runpath) 
-		fprintf (stderr, "WARNING: info.runpath == NULL!!\n");
+	if (!info.runpath)
+		fprintf(stderr, "WARNING: info.runpath == NULL!!\n");
 
 	info.logdir = nstrdup(DEFAULT_LOG_DIR);
-	if (info.logdir[0] != DIR_DELIMITER) {
+	if (info.logdir[0] != DIR_DELIMITER)
+	{
 		nfree(info.logdir);
 		info.logdir = nmalloc(strlen(info.runpath) + strlen(DEFAULT_LOG_DIR) + 1);
 		strcpy(info.logdir, info.runpath);
 		strcat(info.logdir, DEFAULT_LOG_DIR);
 	}
 	info.etcdir = nstrdup(DEFAULT_ETC_DIR);
-	if (info.etcdir[0] != DIR_DELIMITER) {
+	if (info.etcdir[0] != DIR_DELIMITER)
+	{
 		nfree(info.etcdir);
 		info.etcdir = nmalloc(strlen(info.runpath) + strlen(DEFAULT_ETC_DIR) + 1);
 		strcpy(info.etcdir, info.runpath);
@@ -358,10 +365,9 @@ setup_defaults()
 	setup_config_file_settings();
 }
 
-void
-allocate_resources()
-{  
-	xa_debug (1, "DEBUG: Allocating server resources");
+void allocate_resources()
+{
+	xa_debug(1, "DEBUG: Allocating server resources");
 
 	/* Allocate all the sources. */
 	info.sources = avl_create(compare_connection, &info);
@@ -369,52 +375,51 @@ allocate_resources()
 	info.my_hostnames = avl_create(compare_strings, &info);
 
 #ifdef DEBUG_SOCKETS
-	sock_sockets = avl_create (compare_sockets, &info);
+	sock_sockets = avl_create(compare_sockets, &info);
 #endif
-	
-	pool_init ();
 
-	if (!info.sources || !info.threads || !info.my_hostnames) {
+	pool_init();
+
+	if (!info.sources || !info.threads || !info.my_hostnames)
+	{
 		fprintf(stderr, "Cannot allocate tree resources, exiting");
 		clean_shutdown(&info);
 	}
-
 }
 
 /* Shutdown server, make sure sockets are closed, free up the memory */
-void 
-clean_shutdown (server_info_t *info)
+void clean_shutdown(server_info_t *info)
 {
 	connection_t *con;
 	int i;
 	avl_traverser trav = {0};
 	static int main_shutting_down = 0;
-	
-	thread_library_lock ();
-		if (!main_shutting_down)
-			main_shutting_down = 1;
-		else
-			thread_exit (0);
-	thread_library_unlock ();
-	
+
+	thread_library_lock();
+	if (!main_shutting_down)
+		main_shutting_down = 1;
+	else
+		thread_exit(0);
+	thread_library_unlock();
+
 	write_log(LOG_DEFAULT, "Cleanly shutting down...");
 	write_log(LOG_DEFAULT, "Closing all listening sockets...");
 
-	for (i = 0; i < MAXLISTEN; i++) 
+	for (i = 0; i < MAXLISTEN; i++)
 	{
-		if (sock_valid (info->listen_sock[i]))
+		if (sock_valid(info->listen_sock[i]))
 			sock_close(info->listen_sock[i]);
 	}
-	
-	pool_shutdown ();
+
+	pool_shutdown();
 
 	kill_threads();
-	
+
 	/* Close all remaining sockets */
-	sock_close_all_sockets ();
+	sock_close_all_sockets();
 
 	/* Wait for the last threads to die  */
-	thread_wait_for_solitude ();
+	thread_wait_for_solitude();
 
 	thread_mutex_lock(&info->source_mutex);
 
@@ -434,26 +439,28 @@ clean_shutdown (server_info_t *info)
 	write_log(LOG_DEFAULT, "Exiting..");
 	if (info->logfile != -1)
 		fd_close(info->logfile);
-	
+
 #ifdef DEBUG_MEMORY
 	{
 		meminfo_t *mi;
 		avl_traverser trav = {0};
-		
-		while ((mi = avl_traverse(info->mem, &trav))) {
-            if (mi->thread_id != 0 && mi->thread_id != -1) {
-                write_log(LOG_DEFAULT, 
-                        "WARNING: %d bytes allocated \
-                        by thread %d at line %d in %s not freed before thread exit", 
-                        mi->size, 
-                        mi->thread_id, 
-                        mi->line, 
-                        mi->file);
-            }
+
+		while ((mi = avl_traverse(info->mem, &trav)))
+		{
+			if (mi->thread_id != 0 && mi->thread_id != -1)
+			{
+				write_log(LOG_DEFAULT,
+						  "WARNING: %d bytes allocated \
+                        by thread %d at line %d in %s not freed before thread exit",
+						  mi->size,
+						  mi->thread_id,
+						  mi->line,
+						  mi->file);
+			}
 		}
 	}
 #endif
-	
+
 	exit(0);
 }
 
@@ -461,37 +468,38 @@ clean_shutdown (server_info_t *info)
  * connections, and immediately start a new thread for each
  * new connection */
 void *
-threaded_server_proc (void *infoarg)
+threaded_server_proc(void *infoarg)
 {
 	connection_t *con;
-	mythread_t *mt = thread_get_mythread ();
+	mythread_t *mt = thread_get_mythread();
 
 	write_log(LOG_DEFAULT, "Starting main connection handler...");
-  
+
 	/* Setup listeners */
 	setup_listeners();
 
 	/* Just print some runtime server info */
 	print_startup_server_info();
 
-	write_log (LOG_DEFAULT, "Starting Calender Thread...");
+	write_log(LOG_DEFAULT, "Starting Calender Thread...");
 	/* Fork another thread that handles time based actions */
 	thread_create("Calendar Thread", startup_timer_thread, NULL);
-	
+
 	while (running == SERVER_RUNNING)
 	{
 		/* Try to get a new connection */
 		con = get_connection(info.listen_sock);
-		
-		if (con) {
+
+		if (con)
+		{
 			/* handle the new connection it in a new thread */
 			thread_create("Connection Handler", handle_connection, (void *)con);
 		}
-		
+
 		if (mt->ping == 1)
 			mt->ping = 0;
 	}
-  
+
 	/* user pressed ^C */
 	clean_shutdown(&info);
 
@@ -500,7 +508,7 @@ threaded_server_proc (void *infoarg)
 
 #ifdef _WIN32
 
-BOOL WINAPI 
+BOOL WINAPI
 win_sig_die(DWORD CtrlType)
 {
 	write_log(LOG_DEFAULT, "Caught signal %d, perhaps someone is at the door?", CtrlType);
@@ -510,37 +518,37 @@ win_sig_die(DWORD CtrlType)
 
 #else
 
-RETSIGTYPE 
+RETSIGTYPE
 sig_child(int signo)
 {
 	pid_t pid;
 	int stat;
-  
+
 	pid = wait(&stat);
 #ifdef __linux__
 	signal(SIGCHLD, sig_child);
 #endif
 }
 
-RETSIGTYPE 
+RETSIGTYPE
 sig_hup(int signo)
 {
 	parse_default_config_file();
 	open_log_files();
-	
+
 	write_log(LOG_DEFAULT, "Caught SIGHUP, rehashed config and reopened logfiles...");
-	
+
 	signal(SIGHUP, sig_hup);
 }
 
-RETSIGTYPE 
+RETSIGTYPE
 sig_die(int signo)
 {
 	write_log(LOG_DEFAULT, "Caught signal %d, perhaps someone is at the door?", signo);
 	running = SERVER_DYING;
 }
 
-RETSIGTYPE 
+RETSIGTYPE
 sig_die_hard(int signo)
 {
 	printf("Caught signal %d, shutting down!\n", signo);
@@ -549,13 +557,12 @@ sig_die_hard(int signo)
 
 #endif
 
-/* 
- * Create and listen to the specified ports, 
+/*
+ * Create and listen to the specified ports,
  * find out local ip if dynamic,
- * make sure the server name is resolvable 
+ * make sure the server name is resolvable
  */
-void 
-setup_listeners()
+void setup_listeners()
 {
 	int i;
 
@@ -563,16 +570,17 @@ setup_listeners()
 		info.listen_sock[i] = INVALID_SOCKET;
 
 	/* Create the socket, on the correct hostname or INADDR_ANY and bind it to the port. */
-	for (i = 0; i < MAXLISTEN; i++) 
+	for (i = 0; i < MAXLISTEN; i++)
 	{
-		if (info.port[i] <= 0) {
+		if (info.port[i] <= 0)
+		{
 			info.port[i] = INVALID_SOCKET;
 			continue;
 		}
 
 		info.listen_sock[i] = sock_get_server_socket(info.port[i]);
-  
-		if (info.listen_sock[i] == INVALID_SOCKET) 
+
+		if (info.listen_sock[i] == INVALID_SOCKET)
 		{
 			write_log(LOG_DEFAULT, "ERROR: Could not listen to port %d. Perhaps another process is using it?", info.port[i]);
 			clean_shutdown(&info);
@@ -581,32 +589,34 @@ setup_listeners()
 		/* Set the socket to nonblocking */
 		sock_set_blocking(info.listen_sock[i], SOCK_NONBLOCK);
 
-		if (listen(info.listen_sock[i], LISTEN_QUEUE) == SOCKET_ERROR) 
+		if (listen(info.listen_sock[i], LISTEN_QUEUE) == SOCKET_ERROR)
 		{
 			write_log(LOG_DEFAULT, "Could not listen for clients on port %d", info.port[i]);
 			clean_shutdown(&info);
-		} 
+		}
 	}
-	
-	if (ice_strcasecmp(info.server_name, "dynamic") == 0) 
+
+	if (ice_strcasecmp(info.server_name, "dynamic") == 0)
 	{
 		info.server_name = sock_get_local_ipaddress();
 		write_log(LOG_DEFAULT, "Dynamic server name, using the local ip [%s]", info.server_name);
-	} else {
+	}
+	else
+	{
 		char *res, *buf = (char *)nmalloc(20);
 		res = forward(info.server_name, buf);
-		if (!res) {
+		if (!res)
+		{
 			nfree(buf);
 			write_log(LOG_DEFAULT, "WARNING: Resolving the server name [%s] does not work!", info.server_name);
 			return;
 		}
-		
+
 		thread_mutex_lock(&info.hostname_mutex);
-		
+
 		avl_insert(info.my_hostnames, info.server_name);
 		avl_insert(info.my_hostnames, res);
-		
+
 		thread_mutex_unlock(&info.hostname_mutex);
 	}
 }
-

@@ -42,19 +42,19 @@
 #define __ICECAST_LOG_H
 
 void write_log(int whichlog, char *fmt, ...);
-void xa_debug (int level, char *fmt, ...);
+void xa_debug(int level, char *fmt, ...);
 void my_perror(char *where);
 void stats_write(server_info_t *info);
-void clear_logfile(char *logfilename) ;
-int open_log_file (char *name, int oldfd);
-void open_log_files ();
-int fd_write (int fd, const char *fmt, ...);
-int fd_read_line (int fd, char *buff, const int len);
-int fd_close (int fd);
-void stats_write_html (server_info_t *info);
-int get_log_fd (int whichlog);
-void write_log_not_me (int whichlog, connection_t *nothim, char *fmt, ...);
-void log_no_thread (int whichlog, char *fmt, ...);
+void clear_logfile(char *logfilename);
+int open_log_file(char *name, int oldfd);
+void open_log_files();
+int fd_write(int fd, const char *fmt, ...);
+int fd_read_line(int fd, char *buff, const int len);
+int fd_close(int fd);
+void stats_write_html(server_info_t *info);
+int get_log_fd(int whichlog);
+void write_log_not_me(int whichlog, connection_t *nothim, char *fmt, ...);
+void log_no_thread(int whichlog, char *fmt, ...);
 #endif
 
 /* logtime.h. ajd ***************************************************/
@@ -67,7 +67,6 @@ void log_no_thread (int whichlog, char *fmt, ...);
 
 long get_time();
 char *get_log_time();
-char *get_string_time (time_t tt, char *format);
+char *get_string_time(time_t tt, char *format);
 char *get_date();
 #endif
-

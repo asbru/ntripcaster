@@ -16,7 +16,7 @@ SHELL = /bin/sh
 srcdir = .
 top_srcdir = ..
 
-prefix = /home/fuxiangyu/Baidu_ADU/ntripcaster_github/output/
+prefix = /usr/local/ntripcaster
 exec_prefix = ${prefix}
 sbindir = ${exec_prefix}/sbin
 libexecdir = ${exec_prefix}/libexec
@@ -38,10 +38,10 @@ pkgincludedir = $(includedir)/ntripcaster
 
 top_builddir = ..
 
-ACLOCAL = aclocal
-AUTOCONF = autoconf
-AUTOMAKE = automake
-AUTOHEADER = autoheader
+ACLOCAL = /home/jurgen/Documents/Workspace/ntripcaster/missing aclocal
+AUTOCONF = /home/jurgen/Documents/Workspace/ntripcaster/missing autoconf
+AUTOMAKE = /home/jurgen/Documents/Workspace/ntripcaster/missing automake
+AUTOHEADER = /home/jurgen/Documents/Workspace/ntripcaster/missing autoheader
 
 INSTALL = /usr/bin/install -c
 INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)
@@ -58,15 +58,15 @@ POST_UNINSTALL = :
 CC = gcc
 CRYPTLIB = 
 MAINT = #
-MAKEINFO = /home/fuxiangyu/Baidu_ADU/ntripcaster_github/missing makeinfo
-NTRIPCASTER_BINDIR = /home/fuxiangyu/Baidu_ADU/ntripcaster_github/output//bin
+MAKEINFO = /home/jurgen/Documents/Workspace/ntripcaster/missing makeinfo
+NTRIPCASTER_BINDIR = /usr/local/ntripcaster/bin
 NTRIPCASTER_ETCDIR = conf
-NTRIPCASTER_ETCDIR_INST = /home/fuxiangyu/Baidu_ADU/ntripcaster_github/output//conf
+NTRIPCASTER_ETCDIR_INST = /usr/local/ntripcaster/conf
 NTRIPCASTER_LOGDIR = logs
-NTRIPCASTER_LOGDIR_INST = /home/fuxiangyu/Baidu_ADU/ntripcaster_github/output//logs
+NTRIPCASTER_LOGDIR_INST = /usr/local/ntripcaster/logs
 PACKAGE = ntripcaster
 RANLIB = ranlib
-THREADLIBS = -lpthread
+THREADLIBS = 
 UNAME = uname
 VERSION = 0.1.5
 WRAPINCLUDES = 
@@ -94,7 +94,7 @@ PROGRAMS =  $(bin_PROGRAMS)
 DEFS = -DHAVE_CONFIG_H -I. -I$(srcdir) -I..
 CPPFLAGS =  
 LDFLAGS = 
-LIBS = -lm  -lpthread
+LIBS = -lm  
 ntripcaster_OBJECTS =  main.o client.o source.o connection.o log.o \
 sock.o threads.o utility.o avl.o timer.o ntrip_string.o
 ntripcaster_LDADD = $(LDADD)

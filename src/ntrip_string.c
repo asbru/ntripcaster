@@ -99,18 +99,19 @@ extern mutex_t authentication_mutex, library_mutex, sock_mutex;
 const char const_null[] = "(null)";
 
 char *
-splitc (char *first, char *rest, const char divider)
+splitc(char *first, char *rest, const char divider)
 {
 	char *p = NULL;
 
 	if (!rest)
 	{
-		write_log (LOG_DEFAULT, "WARNING: splitc called with NULL pointers");
+		write_log(LOG_DEFAULT, "WARNING: splitc called with NULL pointers");
 		return NULL;
 	}
 
 	p = strchr(rest, divider);
-	if (p == NULL) {
+	if (p == NULL)
+	{
 		if ((first != rest) && (first != NULL))
 			first[0] = 0;
 
@@ -119,13 +120,15 @@ splitc (char *first, char *rest, const char divider)
 
 	*p = 0;
 
-	if (first != NULL) {
-        strcpy(first, rest);
-    }
+	if (first != NULL)
+	{
+		strcpy(first, rest);
+	}
 
-    if (first != rest) {
-        strcpy(rest, p+1);
-    }
+	if (first != rest)
+	{
+		strcpy(rest, p + 1);
+	}
 	return rest;
 }
 
@@ -137,18 +140,18 @@ clean_string(char *string)
 	i = 0;
 	while (string[i] == ' ' && string[i] != '\0')
 		i++;
-	
+
 	return &string[i];
 }
 
 const char *
-con_host (connection_t *con)
+con_host(connection_t *con)
 {
 	static char null[5] = "null";
 
 	if (!con)
 	{
-		write_log (LOG_DEFAULT, "WARNING: con_host called with NULL connection");
+		write_log(LOG_DEFAULT, "WARNING: con_host called with NULL connection");
 		return null;
 	}
 
@@ -161,17 +164,17 @@ con_host (connection_t *con)
 }
 
 char *
-my_strdup (const char *string)
+my_strdup(const char *string)
 {
 	const char *ptr = string;
 	if (!string)
 	{
-		xa_debug (1, "DEBUG: my_strdup called with NULL pointer!");
+		xa_debug(1, "DEBUG: my_strdup called with NULL pointer!");
 		return NULL;
 	}
 	while (ptr && *ptr && *ptr == ' ')
 		ptr++;
-	return nstrdup (ptr);
+	return nstrdup(ptr);
 }
 
 char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -190,7 +193,7 @@ char unalphabet(char alpha)
 		return 63;
 	else if (alpha == '=')
 		return 64;
-	else 
+	else
 		return 65;
 }
 
@@ -203,31 +206,36 @@ util_base64_decode(char *message)
 
 	length = ice_strlen(message);
 
-	if (((length % 4) != 0) || (length == 0)) return NULL;
+	if (((length % 4) != 0) || (length == 0))
+		return NULL;
 
 	decoded_length = length / 4 * 3;
 
-	if (message[length - 1] == '=') {
+	if (message[length - 1] == '=')
+	{
 		decoded_length--;
 		if (message[length - 2] == '=')
 			decoded_length--;
 	}
 
 	decoded = (char *)nmalloc(decoded_length + 1);
-	memset (decoded, 0, decoded_length + 1);
+	memset(decoded, 0, decoded_length + 1);
 
-	while (i < length) {
+	while (i < length)
+	{
 		pad = 0;
 
 		temp = unalphabet(message[i++]);
-		if (temp == 64) {
+		if (temp == 64)
+		{
 			free(decoded);
 			return NULL;
 		}
 		bitqueue = temp;
 
 		temp = unalphabet(message[i++]);
-		if (temp == 64) {
+		if (temp == 64)
+		{
 			free(decoded);
 			return NULL;
 		}
@@ -235,85 +243,95 @@ util_base64_decode(char *message)
 		bitqueue += temp;
 
 		temp = unalphabet(message[i++]);
-		if (temp == 64) {
-			if (i != length - 1) {
+		if (temp == 64)
+		{
+			if (i != length - 1)
+			{
 				free(decoded);
 				return NULL;
 			}
-			temp = 0; pad++;
+			temp = 0;
+			pad++;
 		}
 		bitqueue <<= 6;
 		bitqueue += temp;
 
 		temp = unalphabet(message[i++]);
-		if (pad == 1 && temp != 64) {
-				free(decoded);
-				return NULL;
+		if (pad == 1 && temp != 64)
+		{
+			free(decoded);
+			return NULL;
 		}
-		
-		if (temp == 64) {
-			if (i != length) {
+
+		if (temp == 64)
+		{
+			if (i != length)
+			{
 				free(decoded);
 				return NULL;
 			}
-			temp = 0; pad++;
+			temp = 0;
+			pad++;
 		}
 		bitqueue <<= 6;
 		bitqueue += temp;
 
 		decoded[j++] = ((bitqueue & 0xFF0000) >> 16);
-		if (pad < 2) {
+		if (pad < 2)
+		{
 			decoded[j++] = ((bitqueue & 0xFF00) >> 8);
 			if (pad < 1)
 				decoded[j++] = (bitqueue & 0xFF);
 		}
 	}
-	
+
 	decoded[decoded_length] = '\0';
 
 	return decoded;
 }
 
 char *
-mutex_to_string (mutex_t *mutex, char *out)
+mutex_to_string(mutex_t *mutex, char *out)
 {
 	if (mutex == &info.source_mutex)
-		strcpy (out, "Source Tree Mutex");
+		strcpy(out, "Source Tree Mutex");
 	else if (mutex == &info.misc_mutex)
-		strcpy (out, "Misc. Mutex");
+		strcpy(out, "Misc. Mutex");
 	else if (mutex == &info.mount_mutex)
-		strcpy (out, "Mount Point Mutex");
+		strcpy(out, "Mount Point Mutex");
 	else if (mutex == &info.hostname_mutex)
-		strcpy (out, "Hostname Tree Mutex");
+		strcpy(out, "Hostname Tree Mutex");
 	else if (mutex == &info.double_mutex)
-		strcpy (out, "Double Mutex Mutex");
+		strcpy(out, "Double Mutex Mutex");
 	else if (mutex == &info.thread_mutex)
-		strcpy (out, "Thread Tree Mutex");
+		strcpy(out, "Thread Tree Mutex");
 #ifdef DEBUG_MEMORY
 	else if (mutex == &info.memory_mutex)
-		strcpy (out, "Memory Tree Mutex");
+		strcpy(out, "Memory Tree Mutex");
 #endif
 #ifdef DEBUG_SOCKETS
-	else if (mutex == &sock_mutex) {
-		strcpy (out, "Socket Tree Mutex");
+	else if (mutex == &sock_mutex)
+	{
+		strcpy(out, "Socket Tree Mutex");
 	}
 #endif
 	else if (mutex == &info.resolvmutex)
-		strcpy (out, "DNS Lookup Mutex");
+		strcpy(out, "DNS Lookup Mutex");
 	else if (mutex == &library_mutex)
-		strcpy (out, "Library Mutex");
+		strcpy(out, "Library Mutex");
 	else if (mutex == &authentication_mutex)
-		strcpy (out, "Authentication Mutex");
-	else 
-		strcpy (out, "Unknown Mutex (probably source)");
+		strcpy(out, "Authentication Mutex");
+	else
+		strcpy(out, "Unknown Mutex (probably source)");
 	return out;
 }
 
-char *create_malloced_ascii_host (struct in_addr *in)
+char *create_malloced_ascii_host(struct in_addr *in)
 {
 	char *buf = (char *)nmalloc(20);
 
-	if (!in) {
+	if (!in)
+	{
 		xa_debug(1, "ERROR: Dammit, don't send NULL's to create_malloced_ascii_host()");
 		return NULL;
 	}
@@ -323,11 +341,12 @@ char *create_malloced_ascii_host (struct in_addr *in)
 
 char *makeasciihost(const struct in_addr *in, char *buf)
 {
-	if (!buf) {
+	if (!buf)
+	{
 		write_log(LOG_DEFAULT, "ERROR: makeasciihost called with NULL arguments");
 		return NULL;
 	}
-  
+
 #ifdef HAVE_INET_NTOA
 
 	strncpy(buf, inet_ntoa(*in), 20);
@@ -349,13 +368,13 @@ char *makeasciihost(const struct in_addr *in, char *buf)
 }
 
 char *
-nice_time_minutes (unsigned long int minutes, char *buf)
+nice_time_minutes(unsigned long int minutes, char *buf)
 {
 	unsigned long int days, hours, remains;
-	
+
 	if (!buf)
 	{
-		write_log (LOG_DEFAULT, "ERROR: nice_time_minutes called with NULL argument");
+		write_log(LOG_DEFAULT, "ERROR: nice_time_minutes called with NULL argument");
 		return NULL;
 	}
 
@@ -379,14 +398,14 @@ nice_time_minutes (unsigned long int minutes, char *buf)
 }
 
 char *
-nice_time (unsigned long int seconds, char *buf)
+nice_time(unsigned long int seconds, char *buf)
 {
 	unsigned long int days, hours, minutes, nseconds, remains;
 	char buf2[BUFSIZE];
-	
+
 	if (!buf)
 	{
-		write_log (LOG_DEFAULT, "ERROR: nice_time called with NULL argument");
+		write_log(LOG_DEFAULT, "ERROR: nice_time called with NULL argument");
 		return NULL;
 	}
 
@@ -420,55 +439,52 @@ nice_time (unsigned long int seconds, char *buf)
 }
 
 size_t
-ice_strlen (const char *string)
+ice_strlen(const char *string)
 {
 	if (!string)
 	{
-		xa_debug (1, "ERROR: ice_strlen() called with NULL pointer!");
+		xa_debug(1, "ERROR: ice_strlen() called with NULL pointer!");
 		return 0;
 	}
-	return strlen (string);
+	return strlen(string);
 }
 
-int
-ice_strcmp (const char *s1, const char *s2)
+int ice_strcmp(const char *s1, const char *s2)
 {
 	if (!s1 || !s2)
 	{
-		xa_debug (1, "ERROR: ice_strcmp() called with NULL pointers!");
+		xa_debug(1, "ERROR: ice_strcmp() called with NULL pointers!");
 		return 0;
 	}
-	return strcmp (s1, s2);
+	return strcmp(s1, s2);
 }
 
-int
-ice_strncmp (const char *s1, const char *s2, size_t n)
+int ice_strncmp(const char *s1, const char *s2, size_t n)
 {
 	if (!s1 || !s2)
 	{
-		xa_debug (1, "ERROR: ice_strncmp() called with NULL pointers!");
+		xa_debug(1, "ERROR: ice_strncmp() called with NULL pointers!");
 		return 0;
 	}
-	return strncmp (s1, s2, n);
+	return strncmp(s1, s2, n);
 }
 
-int
-ice_strcasecmp (const char *s1, const char *s2)
+int ice_strcasecmp(const char *s1, const char *s2)
 {
 	if (!s1 || !s2)
 	{
-		xa_debug (1, "ERROR: ice_strcasecmp() called with NULL pointers");
+		xa_debug(1, "ERROR: ice_strcasecmp() called with NULL pointers");
 		return 0;
 	}
 #ifdef _WIN32
-	return stricmp (s1, s2);
+	return stricmp(s1, s2);
 #else
-	return strcasecmp (s1, s2);
+	return strcasecmp(s1, s2);
 #endif
 }
 
 const char *
-nullcheck_string (const char *string)
+nullcheck_string(const char *string)
 {
 	if (!string)
 		return const_null;
@@ -479,7 +495,7 @@ nullcheck_string (const char *string)
 
 #ifndef HAVE_VSNPRINTF
 
-int vsnprintf(char* s, int n, char* fmt, va_list stack)
+int vsnprintf(char *s, int n, char *fmt, va_list stack)
 {
 	char *f, *sf = 0;
 	int i, on, argl = 0;
@@ -489,17 +505,21 @@ int vsnprintf(char* s, int n, char* fmt, va_list stack)
 	on = n;
 	f = fmt;
 	arg = 0;
-	while (arg || (sf = index(f, '%')) || (sf = f + strlen(f))) {
-		if (arg == 0) {
+	while (arg || (sf = index(f, '%')) || (sf = f + strlen(f)))
+	{
+		if (arg == 0)
+		{
 			arg = f;
 			argl = sf - f;
 		}
-		if (argl) {
+		if (argl)
+		{
 			i = argl > n - 1 ? n - 1 : argl;
 			strncpy(s, arg, i);
 			s += i;
 			n -= i;
-			if (i < argl) {
+			if (i < argl)
+			{
 				*s = 0;
 				return on;
 			}
@@ -513,8 +533,7 @@ int vsnprintf(char* s, int n, char* fmt, va_list stack)
 			break;
 		myfp = myf;
 		*myfp++ = *f++;
-		while (((*f >= '0' && *f <='9') || *f == '#')
-		       && myfp - myf < 8)
+		while (((*f >= '0' && *f <= '9') || *f == '#') && myfp - myf < 8)
 		{
 			*myfp++ = *f++;
 		}
@@ -522,7 +541,7 @@ int vsnprintf(char* s, int n, char* fmt, va_list stack)
 		*myfp = 0;
 		if (!*f++)
 			break;
-		switch(f[-1])
+		switch (f[-1])
 		{
 		case '%':
 			arg = "%";
@@ -553,175 +572,168 @@ int vsnprintf(char* s, int n, char* fmt, va_list stack)
 }
 #endif
 
-
 /* vars.c. ajd **********************************************************************/
 
 vartree_t *
-create_header_vars ()
+create_header_vars()
 {
-	avl_tree *t = avl_create (compare_vars, &info);
+	avl_tree *t = avl_create(compare_vars, &info);
 	return t;
 }
 
-void
-extract_header_vars (char *line, vartree_t *vars)
+void extract_header_vars(char *line, vartree_t *vars)
 {
 	char *colonptr;
 	char name[BUFSIZE];
-		
+
 	if (!line || !vars)
 	{
-		xa_debug (1, "ERROR: extract_header_vars() called with NULL pointers");
+		xa_debug(1, "ERROR: extract_header_vars() called with NULL pointers");
 		return;
 	}
 
-	colonptr = strchr (line, ':');
+	colonptr = strchr(line, ':');
 	if (!colonptr && line[0])
 	{
-		xa_debug (1, "WARNING: Invalid header line [%s] without colon", line);
-		return;
-	}
-	
-	if (splitc (name, line, ':') == NULL)
-	{
-		if (line[0])
-			xa_debug (1, "WARNING: Invalid header line [%s]", line);
+		xa_debug(1, "WARNING: Invalid header line [%s] without colon", line);
 		return;
 	}
 
-	add_varpair2 (vars, nstrdup (clean_string (name)), nstrdup (clean_string (line)));
+	if (splitc(name, line, ':') == NULL)
+	{
+		if (line[0])
+			xa_debug(1, "WARNING: Invalid header line [%s]", line);
+		return;
+	}
+
+	add_varpair2(vars, nstrdup(clean_string(name)), nstrdup(clean_string(line)));
 }
 
 varpair_t *
-create_varpair ()
+create_varpair()
 {
-	varpair_t *vp = (varpair_t *) nmalloc (sizeof (varpair_t));
+	varpair_t *vp = (varpair_t *)nmalloc(sizeof(varpair_t));
 	return vp;
 }
 
-void
-add_varpair2 (vartree_t *request_vars, char *name, char *value)
+void add_varpair2(vartree_t *request_vars, char *name, char *value)
 {
-  varpair_t *vp, *out;
+	varpair_t *vp, *out;
 
-  if (!request_vars)
-    {
-      xa_debug (2, "add_varpair2() called with NULL tree");
-      return;
-    }
-  else if (!name || !value)
-    {
-      xa_debug (2, "add_varpair2() called with NULL values");
-      return;
-    }
+	if (!request_vars)
+	{
+		xa_debug(2, "add_varpair2() called with NULL tree");
+		return;
+	}
+	else if (!name || !value)
+	{
+		xa_debug(2, "add_varpair2() called with NULL values");
+		return;
+	}
 
-  vp = create_varpair ();
-  vp->name = name;
-  vp->value = value;
+	vp = create_varpair();
+	vp->name = name;
+	vp->value = value;
 
-  xa_debug (3, "DEBUG: Adding varpair [%s] == [%s]", vp->name, vp->value);
+	xa_debug(3, "DEBUG: Adding varpair [%s] == [%s]", vp->name, vp->value);
 
-  if (!vp->name || !vp->value)
-    {
-      xa_debug (1, "WARNING: Adding NULL variables to tree");
-      return;
-    }
+	if (!vp->name || !vp->value)
+	{
+		xa_debug(1, "WARNING: Adding NULL variables to tree");
+		return;
+	}
 
-  out = avl_replace (request_vars, vp);
+	out = avl_replace(request_vars, vp);
 
-  if (out)
-    {
-      nfree (out->name);
-      nfree (out->value);
-      nfree (out);
-    }
+	if (out)
+	{
+		nfree(out->name);
+		nfree(out->value);
+		nfree(out);
+	}
 }
 
-void
-add_varpair (vartree_t *request_vars, char *varpair)
+void add_varpair(vartree_t *request_vars, char *varpair)
 {
-  char name[BUFSIZE];
+	char name[BUFSIZE];
 
-  if (!varpair)
-    {
-      xa_debug (2, "WARNING: add_varpair called with NULL input");
-      return;
-    }
+	if (!varpair)
+	{
+		xa_debug(2, "WARNING: add_varpair called with NULL input");
+		return;
+	}
 
-  name[0] = '\0';
+	name[0] = '\0';
 
-  if (splitc (name, varpair, '=') == NULL)
-    {
-      xa_debug (1, "WARNING: Invalid varpair [%s]", varpair);
-      return;
-    }
+	if (splitc(name, varpair, '=') == NULL)
+	{
+		xa_debug(1, "WARNING: Invalid varpair [%s]", varpair);
+		return;
+	}
 
-  add_varpair2 (request_vars, nstrdup (name), nstrdup (varpair));
+	add_varpair2(request_vars, nstrdup(name), nstrdup(varpair));
 }
 
 const char *
-get_con_variable (connection_t *con, const char *name)
+get_con_variable(connection_t *con, const char *name)
 {
 	if (!con || !con->headervars)
 		return NULL;
 
-	return (get_variable (con->headervars, name));
+	return (get_variable(con->headervars, name));
 }
 
 const char *
-get_variable (vartree_t *request_vars, const char *name)
+get_variable(vartree_t *request_vars, const char *name)
 {
 	varpair_t search, *vp;
-	
+
 	if (!request_vars || !name)
 	{
-		xa_debug (2, "WARNING: get_variable called with NULL pointers");
+		xa_debug(2, "WARNING: get_variable called with NULL pointers");
 		return NULL;
 	}
 
-	search.name = strchr (name, *name);
+	search.name = strchr(name, *name);
 
-	vp = avl_find (request_vars, &search);
+	vp = avl_find(request_vars, &search);
 	if (!vp)
 		return NULL;
 	return vp->value;
 }
 
-void
-free_con_variables (connection_t *con)
+void free_con_variables(connection_t *con)
 {
 	if (!con)
 		return;
-	free_variables (con->headervars);
+	free_variables(con->headervars);
 	con->headervars = NULL;
 }
 
-void
-free_variables (vartree_t *request_vars)
+void free_variables(vartree_t *request_vars)
 {
 	varpair_t *vp, *out;
-	
+
 	if (!request_vars)
 	{
-		xa_debug (2, "WARNING: free_variables called with NULL tree");
+		xa_debug(2, "WARNING: free_variables called with NULL tree");
 		return;
 	}
 
-	while ((vp = avl_get_any_node (request_vars)))
+	while ((vp = avl_get_any_node(request_vars)))
 	{
-		out = avl_delete (request_vars, vp);
+		out = avl_delete(request_vars, vp);
 
 		if (!out)
 		{
-			xa_debug (2, "DEBUG: Fishy stuff in free_variables.");
+			xa_debug(2, "DEBUG: Fishy stuff in free_variables.");
 			continue;
 		}
 
-		nfree (out->name);
-		nfree (out->value);
-		nfree (out);
+		nfree(out->name);
+		nfree(out->value);
+		nfree(out);
 	}
-	
-	avl_destroy (request_vars, NULL);
-}
 
+	avl_destroy(request_vars, NULL);
+}

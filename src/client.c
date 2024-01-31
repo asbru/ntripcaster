@@ -55,9 +55,9 @@
 
 #include <stdlib.h>
 #include <stdarg.h>
-# ifndef __USE_BSD
-#  define __USE_BSD
-# endif
+#ifndef __USE_BSD
+#define __USE_BSD
+#endif
 #include <string.h>
 
 #ifdef HAVE_UNISTD_H
@@ -71,11 +71,11 @@
 #include <fcntl.h>
 #include <float.h>
 
-#if defined (_WIN32)
+#if defined(_WIN32)
 #include <windows.h>
 #define strncasecmp strnicmp
 #else
-#include <sys/socket.h> 
+#include <sys/socket.h>
 #include <sys/wait.h>
 #include <netinet/in.h>
 #endif
@@ -115,9 +115,10 @@ usertree_t *usertree = NULL;
 time_t lastrehash = 0;
 
 /* mount.c. ajd ****************************************************/
-void client_auto_select_station(void *conarg) {
+void client_auto_select_station(void *conarg)
+{
 	client_t *client;
-    int len = 0;
+	int len = 0;
 	avl_traverser trav = {0};
 	connection_t *sourcecon, *con = (connection_t *)conarg;
 	connection_t *min_dist_con = NULL;
@@ -125,32 +126,35 @@ void client_auto_select_station(void *conarg) {
 	mythread_t *mt;
 	double client_xyz[3];
 	double mount_xyz[3];
-        double distance = 0;
+	double distance = 0;
 
 	client = con->food.client;
-	if (!client->source) {
-        return;
+	if (!client->source)
+	{
+		return;
 	}
 	con->food.client->thread = thread_self();
 	thread_init();
 
-	mt = thread_get_mythread ();
+	mt = thread_get_mythread();
 
 	sock_set_blocking(con->sock, SOCK_NONBLOCK);
 
 	char gpgga[BUFSIZE];
 
-    double last_change_xyz[3];
-    client->last_change_pos.lat = 0.0;
-    client->last_change_pos.lng = 0.0;
-    client->last_change_pos.height = 0.0;
+	double last_change_xyz[3];
+	client->last_change_pos.lat = 0.0;
+	client->last_change_pos.lng = 0.0;
+	client->last_change_pos.height = 0.0;
 
-    while(thread_alive(mt) && con && sock_valid(con->sock) && 
-            con->food.client->alive != CLIENT_DEAD) {
+	while (thread_alive(mt) && con && sock_valid(con->sock) &&
+		   con->food.client->alive != CLIENT_DEAD)
+	{
 
-        len = sock_read_lines(con->sock, gpgga, BUFSIZE);
+		len = sock_read_lines(con->sock, gpgga, BUFSIZE);
 		pos_t pos;
-		if (parse_gpgga_msg(gpgga, &pos) != 0) {
+		if (parse_gpgga_msg(gpgga, &pos) != 0)
+		{
 			continue;
 		}
 		client->pos.lat = pos.lat;
@@ -159,55 +163,59 @@ void client_auto_select_station(void *conarg) {
 
 		llh2xyz(client->pos.lat, client->pos.lng, client->pos.height, &client_xyz);
 
-        llh2xyz(client->last_change_pos.lat, client->last_change_pos.lng, client->last_change_pos.height, 
-                &last_change_xyz);
-        double dist_to_lastchange = compute_distance_xyz(client_xyz, last_change_xyz);
+		llh2xyz(client->last_change_pos.lat, client->last_change_pos.lng, client->last_change_pos.height,
+				&last_change_xyz);
+		double dist_to_lastchange = compute_distance_xyz(client_xyz, last_change_xyz);
 
-        if (dist_to_lastchange > 50.0) {
+		if (dist_to_lastchange > 50.0)
+		{
 
-		    min_distance = DBL_MAX;
+			min_distance = DBL_MAX;
 
-		    while ((sourcecon = avl_traverse(info.sources, &trav)) != NULL) 
-		    {
-	
-		    	xa_debug(2, "DEBUG: Looking on mount [%s]", sourcecon->food.source->audiocast.mount);
+			while ((sourcecon = avl_traverse(info.sources, &trav)) != NULL)
+			{
 
-                get_mount_location_from_file(info.mountposfile, 
-                        sourcecon->food.source->audiocast.mount, &sourcecon->food.source->pos);
-	
-		    	/****************get nearest mount*************************/
-		    	llh2xyz(sourcecon->food.source->pos.lat, sourcecon->food.source->pos.lng,
-		    			sourcecon->food.source->pos.height, &mount_xyz);
+				xa_debug(2, "DEBUG: Looking on mount [%s]", sourcecon->food.source->audiocast.mount);
 
-		    	distance = compute_distance_xyz(client_xyz, mount_xyz);
-                if (distance < min_distance) {
-		    	   min_distance = distance;
-		    	   min_dist_con = sourcecon;
-		    	}
-		    }
+				get_mount_location_from_file(info.mountposfile,
+											 sourcecon->food.source->audiocast.mount, &sourcecon->food.source->pos);
 
-		    thread_mutex_lock(&client->mutex);
-            if (min_dist_con != NULL && min_dist_con->food.source != NULL && 
-                    client != NULL && client->source != NULL &&
-		    	ice_strcmp(min_dist_con->food.source->audiocast.mount, client->source->audiocast.mount) != 0) {
-		    	if (avl_delete(client->source->clients, con)){
-		    		client->source->stats.client_connections--;
-		    		client->source = min_dist_con->food.source;
-		    		avl_insert(min_dist_con->food.source->clients, con);
-		    		min_dist_con->food.source->stats.client_connections++;
-		    		xa_debug(2, "client [%s] change to %s\n", con_host(con), client->source->audiocast.mount);
-		    		write_log(LOG_DEFAULT, "client [%s] change to %s\n", con_host(con), client->source->audiocast.mount);
-                    client->last_change_pos.lat = client->pos.lat;
-                    client->last_change_pos.lng = client->pos.lng;
-                    client->last_change_pos.height = client->pos.height;
-		    	}
-		    }
-		    thread_mutex_unlock(&client->mutex);
-		    sleep(info.read_gpgga_interval);
-            }
+				/****************get nearest mount*************************/
+				llh2xyz(sourcecon->food.source->pos.lat, sourcecon->food.source->pos.lng,
+						sourcecon->food.source->pos.height, &mount_xyz);
+
+				distance = compute_distance_xyz(client_xyz, mount_xyz);
+				if (distance < min_distance)
+				{
+					min_distance = distance;
+					min_dist_con = sourcecon;
+				}
+			}
+
+			thread_mutex_lock(&client->mutex);
+			if (min_dist_con != NULL && min_dist_con->food.source != NULL &&
+				client != NULL && client->source != NULL &&
+				ice_strcmp(min_dist_con->food.source->audiocast.mount, client->source->audiocast.mount) != 0)
+			{
+				if (avl_delete(client->source->clients, con))
+				{
+					client->source->stats.client_connections--;
+					client->source = min_dist_con->food.source;
+					avl_insert(min_dist_con->food.source->clients, con);
+					min_dist_con->food.source->stats.client_connections++;
+					xa_debug(2, "client [%s] change to %s\n", con_host(con), client->source->audiocast.mount);
+					write_log(LOG_DEFAULT, "client [%s] change to %s\n", con_host(con), client->source->audiocast.mount);
+					client->last_change_pos.lat = client->pos.lat;
+					client->last_change_pos.lng = client->pos.lng;
+					client->last_change_pos.height = client->pos.height;
+				}
+			}
+			thread_mutex_unlock(&client->mutex);
+			sleep(info.read_gpgga_interval);
+		}
 	}
 	thread_exit(0);
-    return;
+	return;
 }
 
 void client_login(connection_t *con, char *expr)
@@ -219,105 +227,119 @@ void client_login(connection_t *con, char *expr)
 
 	xa_debug(3, "Client login...\n");
 
-	if (!con || !expr) {
+	if (!con || !expr)
+	{
 		write_log(LOG_DEFAULT, "WARNING: client_login called with NULL pointer");
 		return;
 	}
 
 	zero_request(&req);
 
-	con->headervars = create_header_vars ();
+	con->headervars = create_header_vars();
 
-	do {
-        
-		if (splitc(line, expr, '\n') == NULL) {
+	do
+	{
+
+		if (splitc(line, expr, '\n') == NULL)
+		{
 			strncpy(line, expr, BUFSIZE);
 			go_on = 0;
 		}
 
-		if (ice_strncmp(line, "GET", 3) == 0) {
+		if (ice_strncmp(line, "GET", 3) == 0)
+		{
 			build_request(line, &req);
-
-		} else {
-      			if (ice_strncmp(line, "Host:", 5) == 0 || (ice_strncmp(line, "HOST:", 5) == 0))
-      				build_request(line, &req);
+		}
+		else
+		{
+			if (ice_strncmp(line, "Host:", 5) == 0 || (ice_strncmp(line, "HOST:", 5) == 0))
+				build_request(line, &req);
 			else
-				extract_header_vars (line, con->headervars);
+				extract_header_vars(line, con->headervars);
 		}
 	} while (go_on);
 
-	if (!authenticate_user_request (con, &req))
+	if (!authenticate_user_request(con, &req))
 	{
-		write_401 (con, req.path);
-		kick_not_connected (con, "Not authorized");
+		write_401(con, req.path);
+		kick_not_connected(con, "Not authorized");
 		return;
 	}
 
-	if (((req.path[0] == '/') && (req.path[1] == '\0')) || (req.path[0] == '\0')) {
+	if (((req.path[0] == '/') && (req.path[1] == '\0')) || (req.path[0] == '\0'))
+	{
 		send_sourcetable(con);
-		kick_not_connected (con, "Sourcetable transferred");
+		kick_not_connected(con, "Sourcetable transferred");
 		return;
 	}
-	
-	if (strncasecmp(get_user_agent(con), "ntrip", 5) != 0) {
-		write_401 (con, req.path);
-		kick_not_connected (con, "No NTRIP client");
-		return;	
+
+	if (strncasecmp(get_user_agent(con), "ntrip", 5) != 0)
+	{
+		write_401(con, req.path);
+		kick_not_connected(con, "No NTRIP client");
+		return;
 	}
 
-	xa_debug (1, "Looking for mount [%s:%d%s]", req.host, req.port, req.path);
+	xa_debug(1, "Looking for mount [%s:%d%s]", req.host, req.port, req.path);
 
-	thread_mutex_lock (&info.double_mutex);
-	thread_mutex_lock (&info.source_mutex);
+	thread_mutex_lock(&info.double_mutex);
+	thread_mutex_lock(&info.source_mutex);
 
-    /*************for auto-change mount point************/
-    if (ice_strcmp(info.auto_mount, "true") == 0) {
-        // check mount point exists
-        // not use mount_exists(req.path), because it will enter dead lock
-        avl_traverser tmp_trav = {0};
-        connection_t *tmp_con;
-        int mount_exists = 0;
-        while ((tmp_con = avl_traverse(info.sources, &tmp_trav)) != NULL){
-            if (ice_strcmp(req.path, tmp_con->food.source->audiocast.mount) == 0) {
-                mount_exists = 1;
-            }
-        }
-          
-        if (mount_exists == 0) {
-            printf("mount point not exists, auto select one\n");
-            avl_traverser tmp_trav = {0};
-            connection_t *tmp_con;
-            while ((tmp_con = avl_traverse(info.sources, &tmp_trav)) != NULL){
-                strcpy(req.path, tmp_con->food.source->audiocast.mount);
-            }
-        }
-    }
-
-	source = find_mount_with_req (&req);
-
-	if (source == NULL)  {
-	
-		thread_mutex_unlock (&info.source_mutex);
-		thread_mutex_unlock (&info.double_mutex);
-
-		send_sourcetable(con);
-		kick_not_connected (con, "Transfer Sourcetable");
-		return;
-	} else {
-		if ((info.num_clients >= info.max_clients) 
-		|| (source->food.source->num_clients >= info.max_clients_per_source))
+	/*************for auto-change mount point************/
+	if (ice_strcmp(info.auto_mount, "true") == 0)
+	{
+		// check mount point exists
+		// not use mount_exists(req.path), because it will enter dead lock
+		avl_traverser tmp_trav = {0};
+		connection_t *tmp_con;
+		int mount_exists = 0;
+		while ((tmp_con = avl_traverse(info.sources, &tmp_trav)) != NULL)
 		{
-			thread_mutex_unlock (&info.source_mutex);
-			thread_mutex_unlock (&info.double_mutex);
+			if (ice_strcmp(req.path, tmp_con->food.source->audiocast.mount) == 0)
+			{
+				mount_exists = 1;
+			}
+		}
+
+		if (mount_exists == 0)
+		{
+			printf("mount point not exists, auto select one\n");
+			avl_traverser tmp_trav = {0};
+			connection_t *tmp_con;
+			while ((tmp_con = avl_traverse(info.sources, &tmp_trav)) != NULL)
+			{
+				strcpy(req.path, tmp_con->food.source->audiocast.mount);
+			}
+		}
+	}
+
+	source = find_mount_with_req(&req);
+
+	if (source == NULL)
+	{
+
+		thread_mutex_unlock(&info.source_mutex);
+		thread_mutex_unlock(&info.double_mutex);
+
+		send_sourcetable(con);
+		kick_not_connected(con, "Transfer Sourcetable");
+		return;
+	}
+	else
+	{
+		if ((info.num_clients >= info.max_clients) || (source->food.source->num_clients >= info.max_clients_per_source))
+		{
+			thread_mutex_unlock(&info.source_mutex);
+			thread_mutex_unlock(&info.double_mutex);
 
 			if (info.num_clients >= info.max_clients)
-				xa_debug (2, "DEBUG: inc > imc: %lu %lu", info.num_clients, info.max_clients);
+				xa_debug(2, "DEBUG: inc > imc: %lu %lu", info.num_clients, info.max_clients);
 			else if (source->food.source->num_clients >= info.max_clients_per_source)
-				xa_debug (2, "DEBUG: snc > smc: %lu %lu", source->food.source->num_clients, info.max_clients_per_source);
-			else 
-				xa_debug (1, "ERROR: Erroneous number of clients, what the hell is going on?");
-	
-			kick_not_connected (con, "Server Full (too many listeners)");
+				xa_debug(2, "DEBUG: snc > smc: %lu %lu", source->food.source->num_clients, info.max_clients_per_source);
+			else
+				xa_debug(1, "ERROR: Erroneous number of clients, what the hell is going on?");
+
+			kick_not_connected(con, "Server Full (too many listeners)");
 			return;
 		}
 
@@ -325,27 +347,29 @@ void client_login(connection_t *con, char *expr)
 		con->food.client->type = listener_e;
 		con->food.client->source = source->food.source;
 		source->food.source->stats.client_connections++;
-		if (req.user[0] != '\0') con->user = strdup(req.user);
+		if (req.user[0] != '\0')
+			con->user = strdup(req.user);
 		{
-			const char *ref = get_con_variable (con, "Referer");
-			if (ref && ice_strcmp (ref, "RELAY") == 0)
+			const char *ref = get_con_variable(con, "Referer");
+			if (ref && ice_strcmp(ref, "RELAY") == 0)
 				con->food.client->type = pulling_client_e;
 		}
-		pool_add (con);
+		pool_add(con);
 		greet_client(con, source->food.source);
 	}
 
-	thread_mutex_unlock (&info.source_mutex);
-	thread_mutex_unlock (&info.double_mutex);
+	thread_mutex_unlock(&info.source_mutex);
+	thread_mutex_unlock(&info.double_mutex);
 
-	util_increase_total_clients ();
+	util_increase_total_clients();
 
 	write_log(LOG_DEFAULT, "Accepted client %d [%s] from [%s] on mountpoint [%s]. %d clients connected", con->id,
-		nullcheck_string(con->user), con_host (con), source->food.source->audiocast.mount, info.num_clients);
+			  nullcheck_string(con->user), con_host(con), source->food.source->audiocast.mount, info.num_clients);
 
-    if (ice_strcmp(info.auto_mount, "true") == 0) {
-        client_auto_select_station(con);
-    }
+	if (ice_strcmp(info.auto_mount, "true") == 0)
+	{
+		client_auto_select_station(con);
+	}
 }
 
 client_t *
@@ -372,50 +396,50 @@ void put_client(connection_t *con)
 	con->type = client_e;
 }
 
-void util_increase_total_clients ()
+void util_increase_total_clients()
 {
-	internal_lock_mutex (&info.misc_mutex);
+	internal_lock_mutex(&info.misc_mutex);
 	info.num_clients++;
 	info.hourly_stats.client_connections++;
-	internal_unlock_mutex (&info.misc_mutex);
+	internal_unlock_mutex(&info.misc_mutex);
 }
 
-void
-util_decrease_total_clients ()
+void util_decrease_total_clients()
 {
-	internal_lock_mutex (&info.misc_mutex);
+	internal_lock_mutex(&info.misc_mutex);
 	info.num_clients--;
-	internal_unlock_mutex (&info.misc_mutex);
+	internal_unlock_mutex(&info.misc_mutex);
 }
 
-void 
-del_client(connection_t *client, source_t *source)
+void del_client(connection_t *client, source_t *source)
 {
-	if (!client || !source) {
+	if (!client || !source)
+	{
 		write_log(LOG_DEFAULT, "WARNING: del_client() called with NULL pointer");
 		return;
 	}
-	if (source && client->food.client && (client->food.client->virgin != 1) && (client->food.client->virgin != -1)) {
+	if (source && client->food.client && (client->food.client->virgin != 1) && (client->food.client->virgin != -1))
+	{
 		if (source->num_clients == 0)
-			write_log (LOG_DEFAULT, "WARNING: Bloody going below limits on client count!");
+			write_log(LOG_DEFAULT, "WARNING: Bloody going below limits on client count!");
 		else
 			source->num_clients--;
 	}
-	util_decrease_total_clients ();
+	util_decrease_total_clients();
 }
 
-void 
-greet_client(connection_t *con, source_t *source)
+void greet_client(connection_t *con, source_t *source)
 {
 #ifdef _WIN32
 	int bufsize = 16384;
 #endif
-	
-	if (!con) {
+
+	if (!con)
+	{
 		write_log(LOG_DEFAULT, "WARNING: greet_client called with NULL pointer");
 		return;
 	}
-	sock_write_line (con->sock, "ICY 200 OK");
+	sock_write_line(con->sock, "ICY 200 OK");
 	sock_set_blocking(con->sock, SOCK_NONBLOCK);
 
 #ifdef _WIN32
@@ -425,73 +449,78 @@ greet_client(connection_t *con, source_t *source)
 	con->food.client->virgin = 1;
 }
 
-const char client_types[4][16] = { "listener", "pusher", "puller", "unknown listener" };
+const char client_types[4][16] = {"listener", "pusher", "puller", "unknown listener"};
 
 const char *
-client_type (const connection_t *clicon)
+client_type(const connection_t *clicon)
 {
 	switch (clicon->food.client->type)
 	{
-		case listener_e:
-			return client_types[0];
-			break;
-		case pulling_client_e:
-			return client_types[2];
-			break;
-		default:
-			return client_types[3];
-			break;
+	case listener_e:
+		return client_types[0];
+		break;
+	case pulling_client_e:
+		return client_types[2];
+		break;
+	default:
+		return client_types[3];
+		break;
 	}
 }
 
-int
-client_errors (const client_t *client)
+int client_errors(const client_t *client)
 {
 	if (!client || !client->source)
 		return 0;
-	
+
 	return (CHUNKLEN - (client->cid - client->source->cid)) % CHUNKLEN;
 }
 
-void
-send_sourcetable (connection_t *con) {
+void send_sourcetable(connection_t *con)
+{
 
 	FILE *ifp;
 	char szBuffer[2000], c[2];
 	int nBytes = 1,
-			nBufferBytes = 0,
-			fsize = 0;
+		nBufferBytes = 0,
+		fsize = 0;
 	char *time;
 
 	time = get_log_time();
 
-	sock_write_line (con->sock, "SOURCETABLE 200 OK");
-	sock_write_line (con->sock, "Server: NTRIP NtripCaster %s/%s", info.version, info.ntrip_version);
-	ifp = fopen("../conf/sourcetable.dat","r");
-	if (ifp != NULL) {
+	sock_write_line(con->sock, "SOURCETABLE 200 OK");
+	sock_write_line(con->sock, "Server: NTRIP NtripCaster %s/%s", info.version, info.ntrip_version);
+	ifp = fopen("../conf/sourcetable.dat", "r");
+	if (ifp != NULL)
+	{
 		fseek(ifp, 0, SEEK_END);
 		fsize = (int)ftell(ifp);
 		rewind(ifp);
 
-		sock_write_line (con->sock, "Content-Type: text/plain");
-		sock_write_line (con->sock, "Content-Length: %d\r\n", fsize);
+		sock_write_line(con->sock, "Content-Type: text/plain");
+		sock_write_line(con->sock, "Content-Length: %d\r\n", fsize);
 
-		while (nBytes > 0) {
-			nBytes = fread(c,sizeof(char),sizeof(char),ifp);
-			while (((unsigned int)c[0] != 10) && (nBytes > 0)) {
+		while (nBytes > 0)
+		{
+			nBytes = fread(c, sizeof(char), sizeof(char), ifp);
+			while (((unsigned int)c[0] != 10) && (nBytes > 0))
+			{
 				szBuffer[nBufferBytes] = c[0];
 				nBufferBytes++;
-				nBytes = fread(c,sizeof(char),sizeof(char),ifp);
+				nBytes = fread(c, sizeof(char), sizeof(char), ifp);
 			}
 			szBuffer[nBufferBytes] = '\0';
-			if (nBufferBytes > 0) sock_write_line (con->sock, szBuffer);
+			if (nBufferBytes > 0)
+				sock_write_line(con->sock, szBuffer);
 			nBufferBytes = 0;
 		}
-		sock_write_line (con->sock, "ENDSOURCETABLE");
+		sock_write_line(con->sock, "ENDSOURCETABLE");
 		fclose(ifp);
-	} else sock_write_line (con->sock, "NO SOURCETABLE AVAILABLE");
+	}
+	else
+		sock_write_line(con->sock, "NO SOURCETABLE AVAILABLE");
 
-	free (time);
+	free(time);
 }
 
 /* basic.c. ajd ********************************************************************/
@@ -505,7 +534,8 @@ void rehash_authentication_scheme()
 	mountfile = get_icecast_file(info.configfile, conf_file_e, R_OK);
 
 	if (!rehash_it && mountfile)
-		if (stat(mountfile, &st) == 0) {
+		if (stat(mountfile, &st) == 0)
+		{
 			if (st.st_mtime > lastrehash)
 				rehash_it = 1;
 		}
@@ -518,10 +548,9 @@ void rehash_authentication_scheme()
 void init_authentication_scheme()
 {
 	thread_create_mutex(&authentication_mutex);
-	
-	mounttree = create_mount_tree();
-  usertree = create_user_tree();
 
+	mounttree = create_mount_tree();
+	usertree = create_user_tree();
 }
 
 /*
@@ -548,8 +577,7 @@ void destroy_authentication_scheme()
 	free_user_tree(usertree);
 }
 
-int
-authenticate_user_request(connection_t *con, request_t *req)
+int authenticate_user_request(connection_t *con, request_t *req)
 {
 
 	ice_user_t checkuser, *authuser = NULL;
@@ -557,19 +585,23 @@ authenticate_user_request(connection_t *con, request_t *req)
 
 	if ((mount = need_authentication(req)) == NULL)
 		return 1;
-	else {	
-		if (con_get_user(con, &checkuser) == NULL) return 0;
+	else
+	{
+		if (con_get_user(con, &checkuser) == NULL)
+			return 0;
 
-		xa_debug(1, "DEBUG: Checking authentication for mount %s for user %s with pass %s", nullcheck_string (req->path), nullcheck_string (checkuser.name),
-			nullcheck_string (checkuser.pass));
+		xa_debug(1, "DEBUG: Checking authentication for mount %s for user %s with pass %s", nullcheck_string(req->path), nullcheck_string(checkuser.name),
+				 nullcheck_string(checkuser.pass));
 
 		thread_mutex_lock(&authentication_mutex);
 
-        authuser = find_user_from_tree(mount->usertree, checkuser.name);
+		authuser = find_user_from_tree(mount->usertree, checkuser.name);
 
-		if (authuser != NULL) {
+		if (authuser != NULL)
+		{
 
-			if ((strncmp(checkuser.name, authuser->name, BUFSIZE) == 0) && (strncmp(checkuser.pass, authuser->pass, BUFSIZE) == 0)) {
+			if ((strncmp(checkuser.name, authuser->name, BUFSIZE) == 0) && (strncmp(checkuser.pass, authuser->pass, BUFSIZE) == 0))
+			{
 				strncpy(req->user, checkuser.name, BUFSIZE);
 
 				thread_mutex_unlock(&authentication_mutex);
@@ -589,7 +621,7 @@ authenticate_user_request(connection_t *con, request_t *req)
 }
 
 ice_user_t *
-con_get_user(connection_t * con, ice_user_t * outuser)
+con_get_user(connection_t *con, ice_user_t *outuser)
 {
 	const char *cauth;
 	char *decoded, *ptr;
@@ -597,7 +629,8 @@ con_get_user(connection_t * con, ice_user_t * outuser)
 	char auth[BUFSIZE];
 	char pass[BUFSIZE];
 
-	if (!con || !outuser) {
+	if (!con || !outuser)
+	{
 		xa_debug(1, "WARNING: con_get_user() called with NULL pointers");
 		return NULL;
 	}
@@ -619,7 +652,8 @@ con_get_user(connection_t * con, ice_user_t * outuser)
 
 	xa_debug(1, "DEBUG: con_get_user() decoded: [%s]", decoded);
 
-	if (!splitc(user, decoded, ':')) {
+	if (!splitc(user, decoded, ':'))
+	{
 		free(ptr);
 		xa_debug(1, "DEBUG: con_get_user() Invalid authentication string");
 		return NULL;
@@ -635,7 +669,7 @@ con_get_user(connection_t * con, ice_user_t * outuser)
 	return outuser;
 }
 
-mount_t *need_authentication(request_t * req)
+mount_t *need_authentication(request_t *req)
 {
 	mount_t *mount;
 	mount_t search;
@@ -648,7 +682,8 @@ mount_t *need_authentication(request_t * req)
 
 	mount = avl_find(mounttree, &search);
 
-	if (mount) {
+	if (mount)
+	{
 		thread_mutex_unlock(&authentication_mutex);
 		return mount;
 	}
@@ -666,13 +701,15 @@ void parse_mount_authentication_file()
 	mount_t *mount;
 	char line[BUFSIZE];
 
-	if (!mountfile || ((fd = open_for_reading(mountfile)) == -1)) {
+	if (!mountfile || ((fd = open_for_reading(mountfile)) == -1))
+	{
 		if (mountfile)
 			nfree(mountfile);
 		xa_debug(1, "WARNING: Could not open config file for authentication scheme parsing");
 		return;
 	}
-	while (fd_read_line(fd, line, BUFSIZE)) {
+	while (fd_read_line(fd, line, BUFSIZE))
+	{
 		if (line[0] != '/')
 			continue;
 
@@ -682,7 +719,8 @@ void parse_mount_authentication_file()
 			add_authentication_mount(mount);
 	}
 
-	if (line[BUFSIZE-1] == '\0') {
+	if (line[BUFSIZE - 1] == '\0')
+	{
 		write_log(LOG_DEFAULT, "READ ERROR: too long authentication line in config file (exceeding BUFSIZE)");
 	}
 
@@ -692,18 +730,20 @@ void parse_mount_authentication_file()
 }
 
 mount_t *
- create_mount_from_line(char *line)
+create_mount_from_line(char *line)
 {
 	mount_t *mount;
 	ice_user_t *user, *newuser;
 	int go_on = 1;
 	char cuser[BUFSIZE], name[BUFSIZE];
 
-	if (!line) {
+	if (!line)
+	{
 		xa_debug(1, "WARNING: create_mount_from_line() called with NULL pointer");
 		return NULL;
 	}
-	if (!splitc(name, line, ':')) {
+	if (!splitc(name, line, ':'))
+	{
 		xa_debug(1, "ERROR: Syntax error in mount file, with line [%s]", line);
 		return NULL;
 	}
@@ -712,8 +752,10 @@ mount_t *
 
 	mount->name = nstrdup(clean_string(name));
 
-	do {
-		if (splitc(cuser, line, ',') == NULL) {
+	do
+	{
+		if (splitc(cuser, line, ',') == NULL)
+		{
 			strcpy(cuser, line);
 			go_on = 0;
 		}
@@ -721,13 +763,16 @@ mount_t *
 		newuser = create_user_from_line(cuser);
 		user = find_user_from_tree(usertree, newuser->name);
 
-		if (user != NULL) {
+		if (user != NULL)
+		{
 			avl_insert(mount->usertree, user);
 			nfree(newuser->name);
 			nfree(newuser->pass);
 			nfree(newuser);
-		} else {
-    	avl_insert(usertree, newuser);
+		}
+		else
+		{
+			avl_insert(usertree, newuser);
 			avl_insert(mount->usertree, newuser);
 		}
 
@@ -739,9 +784,9 @@ mount_t *
 }
 
 mount_t *
- create_mount()
+create_mount()
 {
-	mount_t *mount = (mount_t *) nmalloc(sizeof (mount_t));
+	mount_t *mount = (mount_t *)nmalloc(sizeof(mount_t));
 
 	mount->name = NULL;
 	mount->usertree = create_user_tree();
@@ -750,24 +795,26 @@ mount_t *
 }
 
 mounttree_t *
- create_mount_tree()
+create_mount_tree()
 {
 	mounttree_t *gt = avl_create(compare_mounts, &info);
 
 	return gt;
 }
 
-int add_authentication_mount(mount_t * mount)
+int add_authentication_mount(mount_t *mount)
 {
 	mount_t *out;
 
-	if (!mount || !mounttree || !mount->name || !mount->usertree) {
+	if (!mount || !mounttree || !mount->name || !mount->usertree)
+	{
 		xa_debug(1, "ERROR: add_authentication_mount() called with NULL pointers");
 		return 0;
 	}
 	out = avl_replace(mounttree, mount);
 
-	if (out) {
+	if (out)
+	{
 		write_log(LOG_DEFAULT, "WARNING: Duplicate mount record %s, using latter", mount->name);
 		nfree(out->name);
 		avl_destroy(out->usertree, NULL);
@@ -778,19 +825,21 @@ int add_authentication_mount(mount_t * mount)
 	return 1;
 }
 
-void free_mount_tree(mounttree_t * mt)
+void free_mount_tree(mounttree_t *mt)
 {
 	avl_traverser trav =
-	{0};
+		{0};
 	mount_t *mount, *out;
 
 	if (!mt)
 		return;
 
-	while ((mount = avl_traverse(mt, &trav))) {
+	while ((mount = avl_traverse(mt, &trav)))
+	{
 		out = avl_delete(mt, mount);
 
-		if (!out) {
+		if (!out)
+		{
 			xa_debug(1, "WARNING: Weirdness in mounttree!");
 			continue;
 		}
@@ -805,17 +854,19 @@ void free_mount_tree(mounttree_t * mt)
 /* added. ajd ******************************************************************************/
 
 ice_user_t *
- create_user_from_line(char *line)
+create_user_from_line(char *line)
 {
 	ice_user_t *user;
 
 	char name[BUFSIZE];
 
-	if (!line) {
+	if (!line)
+	{
 		xa_debug(1, "WARNING: create_user_from_line() called with NULL pointer");
 		return NULL;
 	}
-	if (!splitc(name, line, ':')) {
+	if (!splitc(name, line, ':'))
+	{
 		xa_debug(1, "ERROR: Syntax error in config file (authentication), with line [%s]", line);
 		return NULL;
 	}
@@ -829,9 +880,9 @@ ice_user_t *
 }
 
 ice_user_t *
- create_user()
+create_user()
 {
-	ice_user_t *user = (ice_user_t *) nmalloc(sizeof (ice_user_t));
+	ice_user_t *user = (ice_user_t *)nmalloc(sizeof(ice_user_t));
 
 	user->name = NULL;
 	user->pass = NULL;
@@ -839,14 +890,14 @@ ice_user_t *
 }
 
 usertree_t *
- create_user_tree()
+create_user_tree()
 {
 	usertree_t *ut = avl_create(compare_users, &info);
 
 	return ut;
 }
 
-void free_user_tree(usertree_t * ut)
+void free_user_tree(usertree_t *ut)
 {
 	avl_traverser trav = {0};
 	ice_user_t *user, *out;
@@ -854,10 +905,12 @@ void free_user_tree(usertree_t * ut)
 	if (!ut)
 		return;
 
-	while ((user = avl_traverse(ut, &trav))) {
+	while ((user = avl_traverse(ut, &trav)))
+	{
 		out = avl_delete(ut, user);
 
-		if (!out) {
+		if (!out)
+		{
 			xa_debug(1, "WARNING: Weirdness in usertree!");
 			continue;
 		}
@@ -870,13 +923,14 @@ void free_user_tree(usertree_t * ut)
 
 /* must have authentication_mutex. ajd */
 ice_user_t *
-find_user_from_tree(usertree_t * ut, const char *name)
+find_user_from_tree(usertree_t *ut, const char *name)
 {
 	ice_user_t search;
 
 	search.name = strchr(name, name[0]);
 
-	if (!ut || !name) {
+	if (!ut || !name)
+	{
 		xa_debug(1, "WARNING: find_user_from_tree() called with NULL pointers");
 		return NULL;
 	}
@@ -884,35 +938,38 @@ find_user_from_tree(usertree_t * ut, const char *name)
 	return avl_find(ut, &search);
 }
 
-void
-print_authentication_scheme() {
+void print_authentication_scheme()
+{
 
 	avl_traverser trav = {0}, trav2 = {0};
 	ice_user_t *user;
 	mount_t *mount;
-	int i=0;
+	int i = 0;
 
 	thread_mutex_lock(&authentication_mutex);
 
 	printf("\nMounttree:\n");
-	while ((mount = avl_traverse(mounttree, &trav))) printf("%d-%s\n",++i,mount->name);
-	i=0;
+	while ((mount = avl_traverse(mounttree, &trav)))
+		printf("%d-%s\n", ++i, mount->name);
+	i = 0;
 	zero_trav(&trav);
 
 	printf("\nGlobal Usertree:\n");
-	while ((user = avl_traverse(usertree, &trav))) printf("%d-%s:%s\n",++i,user->name, user->pass);
-	i=0;
+	while ((user = avl_traverse(usertree, &trav)))
+		printf("%d-%s:%s\n", ++i, user->name, user->pass);
+	i = 0;
 	zero_trav(&trav);
 
 	printf("\nMounttree with Usertrees:\n");
-	while ((mount = avl_traverse(mounttree, &trav))) {
-		printf("%d-%s:\n",++i,mount->name);		
-		while ((user = avl_traverse(mount->usertree, &trav2))) {
-			printf("   %s:%s\n", user->name, user->pass);	
+	while ((mount = avl_traverse(mounttree, &trav)))
+	{
+		printf("%d-%s:\n", ++i, mount->name);
+		while ((user = avl_traverse(mount->usertree, &trav2)))
+		{
+			printf("   %s:%s\n", user->name, user->pass);
 		}
 		zero_trav(&trav2);
 	}
 
 	thread_mutex_unlock(&authentication_mutex);
 }
-
