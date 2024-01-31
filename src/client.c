@@ -161,6 +161,9 @@ void client_auto_select_station(void *conarg)
 		client->pos.lng = pos.lng;
 		client->pos.height = pos.height;
 
+		// TODO zmq_mdp_pnt lat lon -> cell_id
+		// TODO zmq_mdp_swi cell_id lat lon
+
 		llh2xyz(client->pos.lat, client->pos.lng, client->pos.height, &client_xyz);
 
 		llh2xyz(client->last_change_pos.lat, client->last_change_pos.lng, client->last_change_pos.height,
@@ -192,6 +195,9 @@ void client_auto_select_station(void *conarg)
 				}
 			}
 
+			// TODO start cell /VCxxxxxx if not already running
+			// if change_cell? zmq_mdp_act -> VCxxxxxx:START -> NtripServer-to-NtripCaser
+
 			thread_mutex_lock(&client->mutex);
 			if (min_dist_con != NULL && min_dist_con->food.source != NULL &&
 				client != NULL && client->source != NULL &&
@@ -200,6 +206,9 @@ void client_auto_select_station(void *conarg)
 				if (avl_delete(client->source->clients, con))
 				{
 					client->source->stats.client_connections--;
+
+					// TODO if client_connections == 0 -> zmq_mdp_act -> VCxxxxxx:STOP
+
 					client->source = min_dist_con->food.source;
 					avl_insert(min_dist_con->food.source->clients, con);
 					min_dist_con->food.source->stats.client_connections++;
