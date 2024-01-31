@@ -1,2 +1,4 @@
 *.o
 Makefile
+config.status
+config.log

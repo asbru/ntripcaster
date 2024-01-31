@@ -41,10 +41,10 @@
 #ifndef __ICECAST_CONNECTION_H
 #define __ICECAST_CONNECTION_H
 
-void *handle_connection(void *data);
-connection_t *get_connection(int *sock);
-connection_t *create_connection();
-const char *get_user_agent(connection_t *con);
+void *handle_connection (void *data);
+connection_t *get_connection (int *sock);
+connection_t *create_connection ();
+const char *get_user_agent (connection_t *con);
 
 #endif
 
@@ -53,13 +53,13 @@ const char *get_user_agent(connection_t *con);
 #ifndef __ICECAST_POOL_H
 #define __ICECAST_POOL_H
 
-void pool_init();
-void pool_shutdown();
-int pool_add(connection_t *con);
-connection_t *pool_get_my_clients(const source_t *source);
-void pool_lock_write();
-void pool_unlock_write();
-void pool_cleaner();
+void pool_init ();
+void pool_shutdown ();
+int pool_add (connection_t *con);
+connection_t *pool_get_my_clients (const source_t *source);
+void pool_lock_write ();
+void pool_unlock_write ();
+void pool_cleaner ();
 
 #endif
 
@@ -78,24 +78,38 @@ void pool_cleaner();
 #define SOCK_BLOCK 0
 #define SOCK_NONBLOCK 1
 
-struct hostent *ice_gethostbyname(const char *hostname, struct hostent *res, char *buffer, int buflen, int *error);
-struct hostent *ice_gethostbyaddr(const char *host, int hostlen, struct hostent *he, char *buffer, int buflen, int *error);
-void ice_clean_hostent();
-char *reverse(const char *hostname);
-char *forward(const char *name, char *buf);
+struct hostent *ice_gethostbyname (const char *hostname, struct hostent *res,
+                                   char *buffer, int buflen, int *error);
+struct hostent *ice_gethostbyaddr (const char *host, int hostlen,
+                                   struct hostent *he, char *buffer,
+                                   int buflen, int *error);
+void ice_clean_hostent ();
+char *reverse (const char *hostname);
+char *forward (const char *name, char *buf);
 
-struct hostent *standard_gethostbyname(const char *hostname, struct hostent *res, char *buffer, int buflen, int *error);
-struct hostent *standard_gethostbyaddr(const char *host, int hostlen, struct hostent *he, char *buffer, int buflen, int *error);
+struct hostent *standard_gethostbyname (const char *hostname,
+                                        struct hostent *res, char *buffer,
+                                        int buflen, int *error);
+struct hostent *standard_gethostbyaddr (const char *host, int hostlen,
+                                        struct hostent *he, char *buffer,
+                                        int buflen, int *error);
 
 #ifdef SOLARIS_RESOLV_OK
-struct hostent *solaris_gethostbyname_r(const char *hostname, struct hostent *res, char *buffer, int buflen, int *error);
-struct hostent *solaris_gethostbyaddr_r(const char *host, int hostlen, struct hostent *he, char *buffer, int buflen, int *error);
+struct hostent *solaris_gethostbyname_r (const char *hostname,
+                                         struct hostent *res, char *buffer,
+                                         int buflen, int *error);
+struct hostent *solaris_gethostbyaddr_r (const char *host, int hostlen,
+                                         struct hostent *he, char *buffer,
+                                         int buflen, int *error);
 #endif
 
 #ifdef LINUX_RESOLV_OK
-struct hostent *
-linux_gethostbyname_r(const char *hostname, struct hostent *res, char *buffer, int buflen, int *error);
-struct hostent *linux_gethostbyaddr_r(const char *host, int hostlen, struct hostent *he, char *buffer, int buflen, int *error);
+struct hostent *linux_gethostbyname_r (const char *hostname,
+                                       struct hostent *res, char *buffer,
+                                       int buflen, int *error);
+struct hostent *linux_gethostbyaddr_r (const char *host, int hostlen,
+                                       struct hostent *he, char *buffer,
+                                       int buflen, int *error);
 #endif
 
 #endif

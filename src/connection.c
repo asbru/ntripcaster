@@ -53,39 +53,39 @@
 #include <signal.h>
 #endif
 
-#include <stdlib.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <string.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 
-#include <sys/types.h>
 #include <ctype.h>
 #include <errno.h>
-#include <time.h>
 #include <fcntl.h>
+#include <sys/types.h>
+#include <time.h>
 
 #ifndef _WIN32
-#include <sys/socket.h>
-#include <sys/wait.h>
 #include <netinet/in.h>
+#include <sys/socket.h>
 #include <sys/time.h>
+#include <sys/wait.h>
 #else
 #include <winsock.h>
 #endif
 
 #include "avl.h"
-#include "threads.h"
-#include "ntripcaster.h"
-#include "utility.h"
-#include "ntrip_string.h"
+#include "client.h"
 #include "connection.h"
 #include "log.h"
+#include "ntrip_string.h"
+#include "ntripcaster.h"
 #include "sock.h"
-#include "client.h"
 #include "source.h"
+#include "threads.h"
+#include "utility.h"
 
 /* pool.c. ajd *************************************/
 #ifndef __USE_BSD
@@ -118,7 +118,7 @@ extern server_info_t info;
 const char cnull[] = "(null)";
 
 /* pool.c. ajd *************************************/
-static mutex_t pool_mutex = {MUTEX_STATE_UNINIT};
+static mutex_t pool_mutex = { MUTEX_STATE_UNINIT };
 static avl_tree *pool = NULL;
 
 /* ice_resolv.c. ajd *******************************/
@@ -134,199 +134,210 @@ extern struct in_addr localaddr;
  * Nothing is know about the type of the connection.
  * Assert Class: 3
  */
-void *handle_connection(void *arg)
+void *
+handle_connection (void *arg)
 {
-	connection_t *con = (connection_t *)arg;
-	char line[BUFSIZE] = "";
-	int res;
+  connection_t *con = (connection_t *)arg;
+  char line[BUFSIZE] = "";
+  int res;
 
-	thread_init();
+  thread_init ();
 
-	if (!con)
-	{
-		write_log(LOG_DEFAULT, "handle_connection: got NULL connection");
-		thread_exit(0);
-	}
+  if (!con)
+    {
+      write_log (LOG_DEFAULT, "handle_connection: got NULL connection");
+      thread_exit (0);
+    }
 
-	if (info.reverse_lookups)
-		con->hostname = reverse(con->host);
+  if (info.reverse_lookups)
+    con->hostname = reverse (con->host);
 
-	sock_set_blocking(con->sock, SOCK_BLOCK);
+  sock_set_blocking (con->sock, SOCK_BLOCK);
 
-	/* Fill line[] with the user header, ends with \n\n */
-	if ((res = sock_read_lines(con->sock, line, BUFSIZE)) <= 0)
-	{
-		write_log(LOG_DEFAULT, "Socket error on connection %d", con->id);
-		kick_not_connected(con, "Socket error");
-		thread_exit(0);
-	}
+  /* Fill line[] with the user header, ends with \n\n */
+  if ((res = sock_read_lines (con->sock, line, BUFSIZE)) <= 0)
+    {
+      write_log (LOG_DEFAULT, "Socket error on connection %d", con->id);
+      kick_not_connected (con, "Socket error");
+      thread_exit (0);
+    }
 
-	if (ice_strncmp(line, "GET", 3) == 0)
-	{
-		client_login(con, line);
-	}
-	else if (ice_strncmp(line, "SOURCE", 6) == 0 || ice_strncmp(line, "POST", 4) == 0)
-	{ // Kun
-		source_login(con, line);
-	}
-	else
-	{
-		xa_debug(1, "KUN DEBUG: %s\n", line);
-		write_400(con);
-		kick_not_connected(con, "Invalid header");
-	}
+  if (ice_strncmp (line, "GET", 3) == 0)
+    {
+      client_login (con, line);
+    }
+  else if (ice_strncmp (line, "SOURCE", 6) == 0
+           || ice_strncmp (line, "POST", 4) == 0)
+    { // Kun
+      source_login (con, line);
+    }
+  else
+    {
+      xa_debug (1, "KUN DEBUG: %s\n", line);
+      write_400 (con);
+      kick_not_connected (con, "Invalid header");
+    }
 
-	thread_exit(0);
-	return NULL;
+  thread_exit (0);
+  return NULL;
 }
 
 connection_t *
-create_connection()
+create_connection ()
 {
-	connection_t *con = (connection_t *)nmalloc(sizeof(connection_t));
-	con->type = unknown_connection_e;
-	con->sin = NULL;
-	con->hostname = NULL;
-	con->headervars = NULL;
-	con->food.source = NULL;
-	con->user = NULL;
-	return con;
+  connection_t *con = (connection_t *)nmalloc (sizeof (connection_t));
+  con->type = unknown_connection_e;
+  con->sin = NULL;
+  con->hostname = NULL;
+  con->headervars = NULL;
+  con->food.source = NULL;
+  con->user = NULL;
+  return con;
 }
 
 connection_t *
-get_connection(sock_t *sock)
+get_connection (sock_t *sock)
 {
-	int sockfd;
-	mysocklen_t sin_len;
-	connection_t *con;
-	fd_set rfds;
-	struct timeval tv;
-	int i, maxport = 0;
-	struct sockaddr_in *sin = (struct sockaddr_in *)nmalloc(sizeof(struct sockaddr_in));
+  int sockfd;
+  mysocklen_t sin_len;
+  connection_t *con;
+  fd_set rfds;
+  struct timeval tv;
+  int i, maxport = 0;
+  struct sockaddr_in *sin
+      = (struct sockaddr_in *)nmalloc (sizeof (struct sockaddr_in));
 
-	if (!sin)
-	{
-		write_log(LOG_DEFAULT, "WARNING: Weird stuff in get_connection. nmalloc returned NULL sin");
-		return NULL;
-	}
+  if (!sin)
+    {
+      write_log (
+          LOG_DEFAULT,
+          "WARNING: Weird stuff in get_connection. nmalloc returned NULL sin");
+      return NULL;
+    }
 
-	/* setup sockaddr structure */
-	sin_len = sizeof(struct sockaddr_in);
-	memset(sin, 0, sin_len);
+  /* setup sockaddr structure */
+  sin_len = sizeof (struct sockaddr_in);
+  memset (sin, 0, sin_len);
 
-	/* try to accept a connection */
-	FD_ZERO(&rfds);
+  /* try to accept a connection */
+  FD_ZERO (&rfds);
 
-	for (i = 0; i < MAXLISTEN; i++)
-	{
-		if (sock_valid(sock[i]))
-		{
-			FD_SET(sock[i], &rfds);
-			if (sock[i] > maxport)
-				maxport = sock[i];
-		}
-	}
-	maxport += 1;
+  for (i = 0; i < MAXLISTEN; i++)
+    {
+      if (sock_valid (sock[i]))
+        {
+          FD_SET (sock[i], &rfds);
+          if (sock[i] > maxport)
+            maxport = sock[i];
+        }
+    }
+  maxport += 1;
 
-	tv.tv_sec = 0;
-	tv.tv_usec = 30000;
+  tv.tv_sec = 0;
+  tv.tv_usec = 30000;
 
-	if (select(maxport, &rfds, NULL, NULL, &tv) > 0)
-	{
-		for (i = 0; i < MAXLISTEN; i++)
-		{
-			if (sock_valid(sock[i]) && FD_ISSET(sock[i], &rfds))
-				break;
-		}
-	}
-	else
-	{
-		nfree(sin);
-		return NULL;
-	}
+  if (select (maxport, &rfds, NULL, NULL, &tv) > 0)
+    {
+      for (i = 0; i < MAXLISTEN; i++)
+        {
+          if (sock_valid (sock[i]) && FD_ISSET (sock[i], &rfds))
+            break;
+        }
+    }
+  else
+    {
+      nfree (sin);
+      return NULL;
+    }
 
-	sockfd = sock_accept(sock[i], (struct sockaddr *)sin, &sin_len);
+  sockfd = sock_accept (sock[i], (struct sockaddr *)sin, &sin_len);
 
-	if (sockfd >= 0)
-	{
-		con = create_connection();
-		if (!sin)
-		{
-			xa_debug(1, "ERROR: NULL sockaddr struct, wft???");
-			return NULL;
-		}
+  if (sockfd >= 0)
+    {
+      con = create_connection ();
+      if (!sin)
+        {
+          xa_debug (1, "ERROR: NULL sockaddr struct, wft???");
+          return NULL;
+        }
 
-		con->host = create_malloced_ascii_host(&(sin->sin_addr));
-		con->sock = sockfd;
-		con->sin = sin;
-		con->sinlen = sin_len;
-		xa_debug(2, "DEBUG: Getting new connection on socket %d from host %s", sockfd, con->host ? con->host : "(null)");
-		con->hostname = NULL;
-		con->headervars = NULL;
-		con->id = new_id();
-		con->connect_time = get_time();
+      con->host = create_malloced_ascii_host (&(sin->sin_addr));
+      con->sock = sockfd;
+      con->sin = sin;
+      con->sinlen = sin_len;
+      xa_debug (2, "DEBUG: Getting new connection on socket %d from host %s",
+                sockfd, con->host ? con->host : "(null)");
+      con->hostname = NULL;
+      con->headervars = NULL;
+      con->id = new_id ();
+      con->connect_time = get_time ();
 #ifdef HAVE_LIBWRAP
-		if (!sock_check_libwrap(sockfd, unknown_connection_e))
-		{
-			kick_not_connected(con, "Access Denied (tcp wrappers) [generic connection]");
-			return NULL;
-		}
+      if (!sock_check_libwrap (sockfd, unknown_connection_e))
+        {
+          kick_not_connected (
+              con, "Access Denied (tcp wrappers) [generic connection]");
+          return NULL;
+        }
 #endif
-		return con;
-	}
+      return con;
+    }
 
-	if (!is_recoverable(errno))
-		xa_debug(1, "WARNING: accept() failed with on socket %d, max: %d, [%d:%s]", sock[i], maxport,
-				 errno, strerror(errno));
-	nfree(sin);
-	return NULL;
+  if (!is_recoverable (errno))
+    xa_debug (1,
+              "WARNING: accept() failed with on socket %d, max: %d, [%d:%s]",
+              sock[i], maxport, errno, strerror (errno));
+  nfree (sin);
+  return NULL;
 }
 
 const char *
-get_user_agent(connection_t *con)
+get_user_agent (connection_t *con)
 {
-	const char *res;
+  const char *res;
 
-	if (!con)
-		return cnull;
+  if (!con)
+    return cnull;
 
-	res = get_con_variable(con, "User-Agent");
+  res = get_con_variable (con, "User-Agent");
 
-	if (!res)
-		res = get_con_variable(con, "User-agent");
+  if (!res)
+    res = get_con_variable (con, "User-agent");
 
-	if (!res)
-		res = get_con_variable(con, "user-agent");
+  if (!res)
+    res = get_con_variable (con, "user-agent");
 
-	if (!res)
-		return cnull;
-	else
-		return res;
+  if (!res)
+    return cnull;
+  else
+    return res;
 }
 
-/* pool.c. ajd *********************************************************************/
+/* pool.c. ajd
+ * *********************************************************************/
 
 /* Initialize the connection pool.
  * No possible errors.
  * Assert Class: 1
  */
-void pool_init()
+void
+pool_init ()
 {
-	xa_debug(1, "DEBUG: Initializing Connection Pool.");
-	thread_create_mutex(&pool_mutex);
-	pool = avl_create(compare_connection, &info);
+  xa_debug (1, "DEBUG: Initializing Connection Pool.");
+  thread_create_mutex (&pool_mutex);
+  pool = avl_create (compare_connection, &info);
 }
 
 /* Shutdown the connection pool.
  * No possible errors.
  * Assert Class: 1
  */
-void pool_shutdown()
+void
+pool_shutdown ()
 {
-	xa_debug(1, "DEBUG: Closing the pool.");
-	pool_cleaner();
-	avl_destroy(pool, NULL);
-	xa_debug(1, "DEBUG: Pool closed.");
+  xa_debug (1, "DEBUG: Closing the pool.");
+  pool_cleaner ();
+  avl_destroy (pool, NULL);
+  xa_debug (1, "DEBUG: Pool closed.");
 }
 
 /*
@@ -336,28 +347,30 @@ void pool_shutdown()
  * ICE_ERROR_NULL - Argument was NULL
  * Assert Class: 3
  */
-int pool_add(connection_t *con)
+int
+pool_add (connection_t *con)
 {
-	if (!con)
-		return ICE_ERROR_NULL;
+  if (!con)
+    return ICE_ERROR_NULL;
 
-	if ((pool_mutex.thread_id == MUTEX_STATE_UNINIT) || pool == NULL)
-	{
-		xa_debug(1, "WARNING: Tried to use an unitialized pool");
-		return ICE_ERROR_NOT_INITIALIZED;
-	}
+  if ((pool_mutex.thread_id == MUTEX_STATE_UNINIT) || pool == NULL)
+    {
+      xa_debug (1, "WARNING: Tried to use an unitialized pool");
+      return ICE_ERROR_NOT_INITIALIZED;
+    }
 
-	/* Acquire mutex lock */
-	pool_lock_write();
+  /* Acquire mutex lock */
+  pool_lock_write ();
 
-	/* Throw connection into the pool */
-	if (avl_replace(pool, con) != NULL)
-		xa_debug(1, "WARNING: Duplicate connections in the pool (id = %d)", con->id);
+  /* Throw connection into the pool */
+  if (avl_replace (pool, con) != NULL)
+    xa_debug (1, "WARNING: Duplicate connections in the pool (id = %d)",
+              con->id);
 
-	/* Release mutex lock */
-	pool_unlock_write();
+  /* Release mutex lock */
+  pool_unlock_write ();
 
-	return OK;
+  return OK;
 }
 
 /*
@@ -367,250 +380,280 @@ int pool_add(connection_t *con)
  * Assert Class: 3
  */
 connection_t *
-pool_get_my_clients(const source_t *source)
+pool_get_my_clients (const source_t *source)
 {
-	avl_traverser trav = {0};
-	connection_t *clicon = NULL;
+  avl_traverser trav = { 0 };
+  connection_t *clicon = NULL;
 
-	if (!source)
-	{
-		xa_debug(1, "WARNING: pool_get_my_clients() called with NULL source!");
-		return NULL;
-	}
+  if (!source)
+    {
+      xa_debug (1, "WARNING: pool_get_my_clients() called with NULL source!");
+      return NULL;
+    }
 
-	/* Acquire mutex lock */
-	pool_lock_write();
+  /* Acquire mutex lock */
+  pool_lock_write ();
 
-	/* Search for clients for this source */
-	while ((clicon = avl_traverse(pool, &trav)))
-		if (clicon->food.client->source == source)
-			break;
+  /* Search for clients for this source */
+  while ((clicon = avl_traverse (pool, &trav)))
+    if (clicon->food.client->source == source)
+      break;
 
-	/* If found, remove it from the pool */
-	if (clicon)
-		if (avl_delete(pool, clicon) == NULL)
-			xa_debug(1, "WARNING: pool_get_my_clients(): Connection Pool Security Comprimised!");
+  /* If found, remove it from the pool */
+  if (clicon)
+    if (avl_delete (pool, clicon) == NULL)
+      xa_debug (1, "WARNING: pool_get_my_clients(): Connection Pool Security "
+                   "Comprimised!");
 
-	/* Release mutex lock */
-	pool_unlock_write();
+  /* Release mutex lock */
+  pool_unlock_write ();
 
-	return clicon;
+  return clicon;
 }
 
-void pool_lock_write()
+void
+pool_lock_write ()
 {
-	assert(pool_mutex.thread_id != MUTEX_STATE_UNINIT);
-	internal_lock_mutex(&pool_mutex);
+  assert (pool_mutex.thread_id != MUTEX_STATE_UNINIT);
+  internal_lock_mutex (&pool_mutex);
 }
 
-void pool_unlock_write()
+void
+pool_unlock_write ()
 {
-	assert(pool_mutex.thread_id != MUTEX_STATE_UNINIT);
-	internal_unlock_mutex(&pool_mutex);
+  assert (pool_mutex.thread_id != MUTEX_STATE_UNINIT);
+  internal_unlock_mutex (&pool_mutex);
 }
 
-void pool_cleaner()
+void
+pool_cleaner ()
 {
 }
 
-/* ice_resolv.c. ajd *********************************************************************/
+/* ice_resolv.c. ajd
+ * *********************************************************************/
 
 struct hostent *
-ice_gethostbyname(const char *hostname, struct hostent *res, char *buffer, int buflen, int *error)
+ice_gethostbyname (const char *hostname, struct hostent *res, char *buffer,
+                   int buflen, int *error)
 {
-	switch (info.resolv_type)
-	{
+  switch (info.resolv_type)
+    {
 #ifdef SOLARIS_RESOLV_OK
-	case solaris_gethostbyname_r_e:
-		xa_debug(2, "Resolving %s using solaris reentrant type function", hostname);
-		return solaris_gethostbyname_r(hostname, res, buffer, buflen, error);
-		break;
+    case solaris_gethostbyname_r_e:
+      xa_debug (2, "Resolving %s using solaris reentrant type function",
+                hostname);
+      return solaris_gethostbyname_r (hostname, res, buffer, buflen, error);
+      break;
 #endif
 #ifdef LINUX_RESOLV_OK
-	case linux_gethostbyname_r_e:
-		xa_debug(2, "Resolving %s using linux reentrant type function", hostname);
-		return linux_gethostbyname_r(hostname, res, buffer, buflen, error);
-		break;
+    case linux_gethostbyname_r_e:
+      xa_debug (2, "Resolving %s using linux reentrant type function",
+                hostname);
+      return linux_gethostbyname_r (hostname, res, buffer, buflen, error);
+      break;
 #endif
-	case standard_gethostbyname_e:
-		xa_debug(2, "Resolving %s using standard nonreentrant type function", hostname);
-		return standard_gethostbyname(hostname, res, buffer, buflen, error);
-		break;
-	default:
-		xa_debug(1, "DEBUG: gethostbyname (%s) failed cause no resolv function was defined (%d)", hostname,
-				 info.resolv_type);
-		return NULL;
-		break;
-	}
+    case standard_gethostbyname_e:
+      xa_debug (2, "Resolving %s using standard nonreentrant type function",
+                hostname);
+      return standard_gethostbyname (hostname, res, buffer, buflen, error);
+      break;
+    default:
+      xa_debug (1,
+                "DEBUG: gethostbyname (%s) failed cause no resolv function "
+                "was defined (%d)",
+                hostname, info.resolv_type);
+      return NULL;
+      break;
+    }
 }
 
 struct hostent *
-ice_gethostbyaddr(const char *host, int hostlen, struct hostent *he, char *buffer, int buflen, int *error)
+ice_gethostbyaddr (const char *host, int hostlen, struct hostent *he,
+                   char *buffer, int buflen, int *error)
 {
-	char outhost[20];
-	makeasciihost((struct in_addr *)host, outhost);
+  char outhost[20];
+  makeasciihost ((struct in_addr *)host, outhost);
 
-	switch (info.resolv_type)
-	{
+  switch (info.resolv_type)
+    {
 #ifdef SOLARIS_RESOLV_OK
-	case solaris_gethostbyname_r_e:
-		xa_debug(2, "Resolving %s using solaris reentrant type function", outhost);
-		return solaris_gethostbyaddr_r(host, hostlen, he, buffer, buflen, error);
-		break;
+    case solaris_gethostbyname_r_e:
+      xa_debug (2, "Resolving %s using solaris reentrant type function",
+                outhost);
+      return solaris_gethostbyaddr_r (host, hostlen, he, buffer, buflen,
+                                      error);
+      break;
 #endif
 #ifdef LINUX_RESOLV_OK
-	case linux_gethostbyname_r_e:
-		xa_debug(2, "Resolving %s using linux reentrant type function", outhost);
-		return linux_gethostbyaddr_r(host, hostlen, he, buffer, buflen, error);
-		break;
+    case linux_gethostbyname_r_e:
+      xa_debug (2, "Resolving %s using linux reentrant type function",
+                outhost);
+      return linux_gethostbyaddr_r (host, hostlen, he, buffer, buflen, error);
+      break;
 #endif
-	case standard_gethostbyname_e:
-		xa_debug(2, "Resolving %s using standard nonreentrant type function", outhost);
-		return standard_gethostbyaddr(host, hostlen, he, buffer, buflen, error);
-		break;
-	default:
-		xa_debug(1, "DEBUG: gethostbyaddr (%s) failed cause no resolv function was defined", outhost);
-		return NULL;
-		break;
-	}
+    case standard_gethostbyname_e:
+      xa_debug (2, "Resolving %s using standard nonreentrant type function",
+                outhost);
+      return standard_gethostbyaddr (host, hostlen, he, buffer, buflen, error);
+      break;
+    default:
+      xa_debug (1,
+                "DEBUG: gethostbyaddr (%s) failed cause no resolv function "
+                "was defined",
+                outhost);
+      return NULL;
+      break;
+    }
 }
 
 #ifdef SOLARIS_RESOLV_OK
 struct hostent *
-solaris_gethostbyname_r(const char *hostname, struct hostent *res, char *buffer, int buflen, int *error)
+solaris_gethostbyname_r (const char *hostname, struct hostent *res,
+                         char *buffer, int buflen, int *error)
 {
-	*error = 0;
+  *error = 0;
 
-	return gethostbyname_r(hostname, res, buffer, buflen, error);
+  return gethostbyname_r (hostname, res, buffer, buflen, error);
 }
 struct hostent *
-solaris_gethostbyaddr_r(const char *host, int hostlen, struct hostent *he, char *buffer, int buflen, int *error)
+solaris_gethostbyaddr_r (const char *host, int hostlen, struct hostent *he,
+                         char *buffer, int buflen, int *error)
 {
-	*error = 0;
-	return gethostbyaddr_r(host, hostlen, AF_INET, he, buffer, buflen, error);
+  *error = 0;
+  return gethostbyaddr_r (host, hostlen, AF_INET, he, buffer, buflen, error);
 }
 #endif
 
 #ifdef LINUX_RESOLV_OK
 struct hostent *
-linux_gethostbyname_r(const char *hostname, struct hostent *res, char *buffer, int buflen, int *error)
+linux_gethostbyname_r (const char *hostname, struct hostent *res, char *buffer,
+                       int buflen, int *error)
 {
-	*error = 0;
+  *error = 0;
 
-	if (gethostbyname_r(hostname, res, buffer, buflen, &res, error) >= 0)
-		return res;
-	else
-		return NULL;
+  if (gethostbyname_r (hostname, res, buffer, buflen, &res, error) >= 0)
+    return res;
+  else
+    return NULL;
 }
 
 struct hostent *
-linux_gethostbyaddr_r(const char *host, int hostlen, struct hostent *he, char *buffer, int buflen, int *error)
+linux_gethostbyaddr_r (const char *host, int hostlen, struct hostent *he,
+                       char *buffer, int buflen, int *error)
 {
-	int out;
-	*error = 0;
-	if ((out = gethostbyaddr_r(host, hostlen, AF_INET, he, buffer, buflen, &he, error) >= 0))
-	{
-		return he;
-	}
-	xa_debug(2, "gethostbyaddr_r() returned %d, error is %d", out, *error);
-	return NULL;
+  int out;
+  *error = 0;
+  if ((out = gethostbyaddr_r (host, hostlen, AF_INET, he, buffer, buflen, &he,
+                              error)
+             >= 0))
+    {
+      return he;
+    }
+  xa_debug (2, "gethostbyaddr_r() returned %d, error is %d", out, *error);
+  return NULL;
 }
 #endif
 
 struct hostent *
-standard_gethostbyname(const char *hostname, struct hostent *res, char *buffer, int buflen, int *error)
+standard_gethostbyname (const char *hostname, struct hostent *res,
+                        char *buffer, int buflen, int *error)
 {
-	thread_mutex_lock(&info.resolvmutex);
-	*error = 0;
+  thread_mutex_lock (&info.resolvmutex);
+  *error = 0;
 
-	res = gethostbyname(hostname);
-	if (!res)
-	{
-		xa_debug(1, "DEBUG: gethostbyname (%s) failed", hostname);
-		*error = errno;
-	}
-	return res;
+  res = gethostbyname (hostname);
+  if (!res)
+    {
+      xa_debug (1, "DEBUG: gethostbyname (%s) failed", hostname);
+      *error = errno;
+    }
+  return res;
 }
 
 struct hostent *
-standard_gethostbyaddr(const char *host, int hostlen, struct hostent *he, char *buffer, int buflen, int *error)
+standard_gethostbyaddr (const char *host, int hostlen, struct hostent *he,
+                        char *buffer, int buflen, int *error)
 {
-	*error = 0;
-	thread_mutex_lock(&info.resolvmutex);
-	he = gethostbyaddr(host, hostlen, AF_INET);
-	*error = errno;
-	return he;
+  *error = 0;
+  thread_mutex_lock (&info.resolvmutex);
+  he = gethostbyaddr (host, hostlen, AF_INET);
+  *error = errno;
+  return he;
 }
 
-void ice_clean_hostent()
+void
+ice_clean_hostent ()
 {
-	/* When not using reentrant versions of gethostbyname, this
-	   mutex is locked before calling gethostbyname() and therefore, unlock it here. */
-	if (info.resolv_type == standard_gethostbyname_e)
-		thread_mutex_unlock(&info.resolvmutex);
+  /* When not using reentrant versions of gethostbyname, this
+     mutex is locked before calling gethostbyname() and therefore, unlock it
+     here. */
+  if (info.resolv_type == standard_gethostbyname_e)
+    thread_mutex_unlock (&info.resolvmutex);
 }
 
 char *
-reverse(const char *host)
+reverse (const char *host)
 {
-	struct hostent hostinfo, *hostinfoptr;
-	struct in_addr addr;
-	int error;
-	char *outhost;
-	char buffer[BUFSIZE];
+  struct hostent hostinfo, *hostinfoptr;
+  struct in_addr addr;
+  int error;
+  char *outhost;
+  char buffer[BUFSIZE];
 
-	if (!host)
-	{
-		write_log(LOG_DEFAULT, "ERROR: reverse() called with NULL host");
-		return NULL;
-	}
+  if (!host)
+    {
+      write_log (LOG_DEFAULT, "ERROR: reverse() called with NULL host");
+      return NULL;
+    }
 
-	xa_debug(1, "reverse() reverse resolving %s", host);
+  xa_debug (1, "reverse() reverse resolving %s", host);
 
-	if (inet_aton(host, &addr))
-	{
-		hostinfoptr = ice_gethostbyaddr((char *)&addr, sizeof(struct in_addr), &hostinfo, buffer, BUFSIZE, &error);
+  if (inet_aton (host, &addr))
+    {
+      hostinfoptr = ice_gethostbyaddr ((char *)&addr, sizeof (struct in_addr),
+                                       &hostinfo, buffer, BUFSIZE, &error);
 
-		if (hostinfoptr && hostinfoptr->h_name)
-			outhost = nstrdup(hostinfoptr->h_name);
-		else
-			outhost = NULL;
+      if (hostinfoptr && hostinfoptr->h_name)
+        outhost = nstrdup (hostinfoptr->h_name);
+      else
+        outhost = NULL;
 
-		ice_clean_hostent();
-		return outhost;
-	}
-	else
-		return NULL;
+      ice_clean_hostent ();
+      return outhost;
+    }
+  else
+    return NULL;
 }
 
 char *
-forward(const char *name, char *target)
+forward (const char *name, char *target)
 {
-	struct hostent hostinfo, *hostinfoptr;
-	struct sockaddr_in sin;
-	char buf[BUFSIZE];
-	int error;
+  struct hostent hostinfo, *hostinfoptr;
+  struct sockaddr_in sin;
+  char buf[BUFSIZE];
+  int error;
 
-	xa_debug(1, "forward() resolving %s", name);
+  xa_debug (1, "forward() resolving %s", name);
 
-	if (isdigit((int)name[0]) && isdigit((int)name[strlen(name) - 1]))
-		return NULL; /* No point in resolving ip's */
+  if (isdigit ((int)name[0]) && isdigit ((int)name[strlen (name) - 1]))
+    return NULL; /* No point in resolving ip's */
 
-	hostinfoptr = ice_gethostbyname(name, &hostinfo, buf, BUFSIZE, &error);
+  hostinfoptr = ice_gethostbyname (name, &hostinfo, buf, BUFSIZE, &error);
 
-	if (!hostinfoptr)
-	{
-		ice_clean_hostent();
-		return NULL;
-	}
+  if (!hostinfoptr)
+    {
+      ice_clean_hostent ();
+      return NULL;
+    }
 
-	memset(&sin, 0, sizeof(sin));
+  memset (&sin, 0, sizeof (sin));
 
-	sin.sin_addr.s_addr = *(unsigned long *)hostinfoptr->h_addr_list[0];
+  sin.sin_addr.s_addr = *(unsigned long *)hostinfoptr->h_addr_list[0];
 
-	makeasciihost(&sin.sin_addr, target);
+  makeasciihost (&sin.sin_addr, target);
 
-	ice_clean_hostent();
+  ice_clean_hostent ();
 
-	return target;
+  return target;
 }

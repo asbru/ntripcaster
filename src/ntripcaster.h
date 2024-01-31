@@ -98,10 +98,12 @@
 #define DEFAULT_CONSOLE_MODE 0
 #define DEFAULT_NTRIP_VERSION "1.0"
 
-#if defined(SOLARIS) && defined(HAVE_GETHOSTBYNAME_R) && defined(HAVE_GETHOSTBYADDR_R)
+#if defined(SOLARIS) && defined(HAVE_GETHOSTBYNAME_R)                         \
+    && defined(HAVE_GETHOSTBYADDR_R)
 #define DEFAULT_RESOLV_TYPE solaris_gethostbyname_r_e
 #define SOLARIS_RESOLV_OK 1
-#elif defined(LINUX) && defined(HAVE_GETHOSTBYNAME_R) && defined(HAVE_GETHOSTBYADDR_R)
+#elif defined(LINUX) && defined(HAVE_GETHOSTBYNAME_R)                         \
+    && defined(HAVE_GETHOSTBYADDR_R)
 #define DEFAULT_RESOLV_TYPE linux_gethostbyname_r_e
 #define LINUX_RESOLV_OK 1
 #else
@@ -134,56 +136,57 @@
 
 #endif
 
-/* icetypes.h. ajd ****************************************************************************/
+/* icetypes.h. ajd
+ * ****************************************************************************/
 #ifndef __ICECAST_TYPES_H
 #define __ICECAST_TYPES_H
 
 typedef enum
 {
-	listener_e = 0,
-	pulling_client_e = 2,
-	unknown_client_e = -1
+  listener_e = 0,
+  pulling_client_e = 2,
+  unknown_client_e = -1
 } client_type_t;
 typedef enum
 {
-	icy_e = 0
+  icy_e = 0
 } protocol_t;
 typedef enum
 {
-	encoder_e = 0,
-	puller_e = 1,
-	on_demand_pull_e = 2,
-	unknown_source_e = -1
+  encoder_e = 0,
+  puller_e = 1,
+  on_demand_pull_e = 2,
+  unknown_source_e = -1
 } source_type_t;
 typedef enum contype_e
 {
-	client_e = 0,
-	source_e = 1,
-	unknown_connection_e = 3
+  client_e = 0,
+  source_e = 1,
+  unknown_connection_e = 3
 } contype_t;
 typedef enum
 {
-	conf_file_e = 1,
-	log_file_e = 2
+  conf_file_e = 1,
+  log_file_e = 2
 } filetype_t;
 typedef enum
 {
-	linux_gethostbyname_r_e = 1,
-	solaris_gethostbyname_r_e = 2,
-	standard_gethostbyname_e = 3
+  linux_gethostbyname_r_e = 1,
+  solaris_gethostbyname_r_e = 2,
+  standard_gethostbyname_e = 3
 } resolv_type_t;
-typedef int icecast_function();
+typedef int icecast_function ();
 typedef avl_tree vartree_t;
 typedef int wid_t;
 typedef enum type_e
 {
-	integer_e,
-	real_e,
-	string_e,
-	function_e
+  integer_e,
+  real_e,
+  string_e,
+  function_e
 } type_t;
 
-#define BUFSIZE 1000
+#define BUFSIZE 32
 #define CHUNKLEN 64
 #define MAXMETADATALENGTH (100)
 #define SOURCE_BUFFSIZE 1000
@@ -212,182 +215,184 @@ typedef sock_t SOCKET;
 // add for auto change mount point
 typedef struct
 {
-	double lat;
-	double lng;
-	double height;
+  double lat;
+  double lng;
+  double height;
 } pos_t;
 
 typedef struct varpair_St
 {
-	char *name;
-	char *value;
+  char *name;
+  char *value;
 } varpair_t;
 
 typedef struct request_St
 {
-	char path[BUFSIZE];
-	char host[BUFSIZE];
-	char user[BUFSIZE];
-	int port;
-	pos_t pos;
+  char path[BUFSIZE];
+  char host[BUFSIZE];
+  char user[BUFSIZE];
+  int port;
+  pos_t pos;
 } request_t;
 
 typedef struct chunkSt
 {
-	char data[SOURCE_BUFFSIZE + MAXMETADATALENGTH];
-	int len;
-	int metalen;
-	int clients_left;
+  char data[SOURCE_BUFFSIZE + MAXMETADATALENGTH];
+  int len;
+  int metalen;
+  int clients_left;
 } chunk_t;
 
 typedef struct statistics_St
 {
-	unsigned long int read_bytes;		   /* Bytes read from encoder(s) */
-	unsigned long int read_kilos;		   /* Kilos read from encoder(s) */
-	unsigned long int write_bytes;		   /* Bytes written to client(s) */
-	unsigned long int write_kilos;		   /* Kilos written to client(s) */
-	unsigned long int client_connections;  /* Number of connects from clients */
-	unsigned long int source_connections;  /* Number of connects from sources */
-	unsigned long int client_connect_time; /* Total sum of the time each client has been connected (minutes) */
-	unsigned long int source_connect_time; /* Total sum of the time each source has been connected (minutes) */
+  unsigned long int read_bytes;          /* Bytes read from encoder(s) */
+  unsigned long int read_kilos;          /* Kilos read from encoder(s) */
+  unsigned long int write_bytes;         /* Bytes written to client(s) */
+  unsigned long int write_kilos;         /* Kilos written to client(s) */
+  unsigned long int client_connections;  /* Number of connects from clients */
+  unsigned long int source_connections;  /* Number of connects from sources */
+  unsigned long int client_connect_time; /* Total sum of the time each client
+                                            has been connected (minutes) */
+  unsigned long int source_connect_time; /* Total sum of the time each source
+                                            has been connected (minutes) */
 } statistics_t;
 
 typedef struct audiocast_St
 {
-	char *name;	 //		 Name of Server
-	char *mount; //	 Name of source
+  char *name;  //		 Name of Server
+  char *mount; //	 Name of source
 } audiocast_t;
 
 typedef struct source_St
 {
-	int connected;
-	source_type_t type;
-	protocol_t protocol;
-	mutex_t mutex;
-	audiocast_t audiocast;
-	avl_tree *clients;	/* Tree of clients */
-	icethread_t thread; /* Pointer to running thread */
-	statistics_t stats;
-	unsigned long int num_clients;
-	chunk_t chunk[CHUNKLEN];
-	int cid;
-	int priority;
-	char *source_agent;
-	pos_t pos; // add for gpgga
+  int connected;
+  source_type_t type;
+  protocol_t protocol;
+  mutex_t mutex;
+  audiocast_t audiocast;
+  avl_tree *clients;  /* Tree of clients */
+  icethread_t thread; /* Pointer to running thread */
+  statistics_t stats;
+  unsigned long int num_clients;
+  chunk_t chunk[CHUNKLEN];
+  int cid;
+  int priority;
+  char *source_agent;
+  pos_t pos; // add for gpgga
 
 } source_t;
 
 typedef struct client_St
 {
-	unsigned int use_udp : 1;
-	unsigned int use_icy : 1;
-	int errors; /* Used at first to mark position in buf, later to mark error */
-	int offset;
-	int cid;
-	int alive;
-	client_type_t type;
-	unsigned long int write_bytes; /* Number of bytes written to client */
-	int virgin;
-	source_t *source;	 /* Pointer back to the source */
-	int data_send_times; // add for auto change station
-	mutex_t mutex;
-	icethread_t thread;
-	pos_t pos;
-	pos_t last_change_pos;
+  unsigned int use_udp : 1;
+  unsigned int use_icy : 1;
+  int errors; /* Used at first to mark position in buf, later to mark error */
+  int offset;
+  int cid;
+  int alive;
+  client_type_t type;
+  unsigned long int write_bytes; /* Number of bytes written to client */
+  int virgin;
+  source_t *source;    /* Pointer back to the source */
+  int data_send_times; // add for auto change station
+  mutex_t mutex;
+  icethread_t thread;
+  pos_t pos;
+  pos_t last_change_pos;
 } client_t;
 
 typedef struct connectionSt
 {
-	contype_t type;
-	union
-	{
-		client_t *client;
-		source_t *source;
-	} food;
-	unsigned long int id; /* Session unique connection id */
-	struct sockaddr_in *sin;
-	mysocklen_t sinlen;
-	SOCKET sock;
-	time_t connect_time;
-	char *host;
-	char *hostname;
-	vartree_t *headervars;
-	char *user;
+  contype_t type;
+  union
+  {
+    client_t *client;
+    source_t *source;
+  } food;
+  unsigned long int id; /* Session unique connection id */
+  struct sockaddr_in *sin;
+  mysocklen_t sinlen;
+  SOCKET sock;
+  time_t connect_time;
+  char *host;
+  char *hostname;
+  vartree_t *headervars;
+  char *user;
 } connection_t;
 
 typedef struct
 {
-	char *runpath; /* argv[0] */
-	int port[MAXLISTEN];
-	SOCKET listen_sock[MAXLISTEN]; /* Socket to listen to */
-	char *etcdir;				   /* Name of config file directory */
-	char *logdir;
-	avl_tree *sources;
-	unsigned long int num_sources;
-	unsigned long int max_sources;
-	char *encoder_pass; /* Password to verify encoder */
-	char *configfile;	/* Name of configuration file */
-	char *mountfile;
-	char *logfilename; /* Name of default log file */
-	int logfile;	   /* File descriptor for the logfile */
-	time_t statslasttime;
-	long server_start_time; /* The time the server started */
-	time_t statuslasttime;
-	int statustime;
-	char *myhostname;  /* NULL unless bind to specific ip */
-	char *server_name; /* Server name */
-	char *version;
-	char *ntrip_version;
-	char *timezone;
-	int detach;
-	double bandwidth_usage;
-	double sleep_ratio;
-	int reverse_lookups;
-	int force_servername;
-	int mount_fallback;
-	icethread_t main_thread;
+  char *runpath; /* argv[0] */
+  int port[MAXLISTEN];
+  SOCKET listen_sock[MAXLISTEN]; /* Socket to listen to */
+  char *etcdir;                  /* Name of config file directory */
+  char *logdir;
+  avl_tree *sources;
+  unsigned long int num_sources;
+  unsigned long int max_sources;
+  char *encoder_pass; /* Password to verify encoder */
+  char *configfile;   /* Name of configuration file */
+  char *mountfile;
+  char *logfilename; /* Name of default log file */
+  int logfile;       /* File descriptor for the logfile */
+  time_t statslasttime;
+  long server_start_time; /* The time the server started */
+  time_t statuslasttime;
+  int statustime;
+  char *myhostname;  /* NULL unless bind to specific ip */
+  char *server_name; /* Server name */
+  char *version;
+  char *ntrip_version;
+  char *timezone;
+  int detach;
+  double bandwidth_usage;
+  double sleep_ratio;
+  int reverse_lookups;
+  int force_servername;
+  int mount_fallback;
+  icethread_t main_thread;
 #ifndef _WIN32
-	pthread_attr_t defaultattr;
+  pthread_attr_t defaultattr;
 #endif
-	mutex_t source_mutex;
-	mutex_t misc_mutex;
-	mutex_t mount_mutex;
-	mutex_t hostname_mutex;
-	mutex_t double_mutex;
-	mutex_t thread_mutex;
-	mutex_t mutex_mutex;
+  mutex_t source_mutex;
+  mutex_t misc_mutex;
+  mutex_t mount_mutex;
+  mutex_t hostname_mutex;
+  mutex_t double_mutex;
+  mutex_t thread_mutex;
+  mutex_t mutex_mutex;
 #ifdef DEBUG_MEMORY
-	mutex_t memory_mutex;
-	avl_tree *mem;
+  mutex_t memory_mutex;
+  avl_tree *mem;
 #endif
-	mutex_t resolvmutex;
-	resolv_type_t resolv_type;
-	int client_timeout;
-	char *client_pass;
-	unsigned long int num_clients;
-	unsigned long int max_clients;
-	unsigned long int max_clients_per_source;
-	avl_tree *threads;
-	avl_tree *mutexes;
-	long int threadid;
-	long int mutexid;
-	unsigned long int id;
-	int kick_clients;
-	avl_tree *my_hostnames;
-	statistics_t hourly_stats;
-	statistics_t daily_stats;
-	statistics_t total_stats;
-	char *location;
-	char *rp_email;
-	char *server_url;
-	int consoledebuglevel;
-	int logfiledebuglevel;
+  mutex_t resolvmutex;
+  resolv_type_t resolv_type;
+  int client_timeout;
+  char *client_pass;
+  unsigned long int num_clients;
+  unsigned long int max_clients;
+  unsigned long int max_clients_per_source;
+  avl_tree *threads;
+  avl_tree *mutexes;
+  long int threadid;
+  long int mutexid;
+  unsigned long int id;
+  int kick_clients;
+  avl_tree *my_hostnames;
+  statistics_t hourly_stats;
+  statistics_t daily_stats;
+  statistics_t total_stats;
+  char *location;
+  char *rp_email;
+  char *server_url;
+  int consoledebuglevel;
+  int logfiledebuglevel;
 
-	int console_mode;
+  int console_mode;
 
-	char *mountposfile;
-	char *auto_mount;
-	int read_gpgga_interval;
+  char *mountposfile; // absolute location of mountpos.conf file
+  char *auto_mount;
+  int read_gpgga_interval; // read gga interval in seconds
 
 } server_info_t;
 

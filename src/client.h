@@ -41,61 +41,62 @@
 #ifndef __ICECAST_CLIENT_H
 #define __ICECAST_CLIENT_H
 
-void client_login(connection_t *con, char *line);
-void put_client(connection_t *con);
-client_t *create_client();
-void util_increase_total_clients();
-void util_decrease_total_clients();
-void del_client(connection_t *client, source_t *source);
-int client_errors(const client_t *client);
-void greet_client(connection_t *con, source_t *source);
-const char *client_type(const connection_t *clicon);
-void send_sourcetable(connection_t *con);
-void *client_auto_select_source(void *conarg);
+void client_login (connection_t *con, char *line);
+void put_client (connection_t *con);
+client_t *create_client ();
+void util_increase_total_clients ();
+void util_decrease_total_clients ();
+void del_client (connection_t *client, source_t *source);
+int client_errors (const client_t *client);
+void greet_client (connection_t *con, source_t *source);
+const char *client_type (const connection_t *clicon);
+void send_sourcetable (connection_t *con);
+void *client_auto_select_source (void *conarg);
 
 #endif
 
-/* basic.h. ajd ********************************************************************/
+/* basic.h. ajd
+ * ********************************************************************/
 
 typedef avl_tree mounttree_t;
 typedef avl_tree usertree_t;
 
 typedef struct mountSt
 {
-	char *name;
-	usertree_t *usertree;
+  char *name;
+  usertree_t *usertree;
 } mount_t;
 
 typedef struct userSt
 {
-	char *name;
-	char *pass;
+  char *name;
+  char *pass;
 } ice_user_t;
 
-void init_authentication_scheme();
-void parse_authentication_scheme();
-void destroy_authentication_scheme();
-int authenticate_user_request(connection_t *con, request_t *req);
-mount_t *need_authentication(request_t *req);
-void rehash_authentication_scheme();
-ice_user_t *con_get_user(connection_t *con, ice_user_t *outuser);
+void init_authentication_scheme ();
+void parse_authentication_scheme ();
+void destroy_authentication_scheme ();
+int authenticate_user_request (connection_t *con, request_t *req);
+mount_t *need_authentication (request_t *req);
+void rehash_authentication_scheme ();
+ice_user_t *con_get_user (connection_t *con, ice_user_t *outuser);
 
 /* mount.h.ajd ****************************************************/
 
-void parse_mount_authentication_file();
-mount_t *create_mount_from_line(char *line);
-mount_t *create_mount();
-mounttree_t *create_mount_tree();
-int add_authentication_mount(mount_t *mount);
-void free_mount_tree(mounttree_t *mt);
-int runtime_add_mount(const char *name);
-int runtime_add_mount_with_group(const char *name, char *groups);
+void parse_mount_authentication_file ();
+mount_t *create_mount_from_line (char *line);
+mount_t *create_mount ();
+mounttree_t *create_mount_tree ();
+int add_authentication_mount (mount_t *mount);
+void free_mount_tree (mounttree_t *mt);
+int runtime_add_mount (const char *name);
+int runtime_add_mount_with_group (const char *name, char *groups);
 
 /* added. ajd ******************************/
-ice_user_t *create_user_from_line(char *line);
-ice_user_t *create_user();
-usertree_t *create_user_tree();
-void free_user_tree(usertree_t *ut);
-ice_user_t *find_user_from_tree(usertree_t *ut, const char *name);
+ice_user_t *create_user_from_line (char *line);
+ice_user_t *create_user ();
+usertree_t *create_user_tree ();
+void free_user_tree (usertree_t *ut);
+ice_user_t *find_user_from_tree (usertree_t *ut, const char *name);
 
-void print_authentication_scheme();
+void print_authentication_scheme ();

@@ -16,7 +16,7 @@ SHELL = /bin/sh
 srcdir = .
 top_srcdir = ..
 
-prefix = /usr/local/ntripcaster
+prefix = /home/jurgen/Documents/Workspace/ntripcaster/share
 exec_prefix = ${prefix}
 
 bindir = ${exec_prefix}/bin
@@ -61,11 +61,11 @@ CC = gcc
 CRYPTLIB = 
 MAINT = #
 MAKEINFO = /home/jurgen/Documents/Workspace/ntripcaster/missing makeinfo
-NTRIPCASTER_BINDIR = /usr/local/ntripcaster/bin
+NTRIPCASTER_BINDIR = /home/jurgen/Documents/Workspace/ntripcaster/share/bin
 NTRIPCASTER_ETCDIR = conf
-NTRIPCASTER_ETCDIR_INST = /usr/local/ntripcaster/conf
+NTRIPCASTER_ETCDIR_INST = /home/jurgen/Documents/Workspace/ntripcaster/share/conf
 NTRIPCASTER_LOGDIR = logs
-NTRIPCASTER_LOGDIR_INST = /usr/local/ntripcaster/logs
+NTRIPCASTER_LOGDIR_INST = /home/jurgen/Documents/Workspace/ntripcaster/share/logs
 PACKAGE = ntripcaster
 RANLIB = ranlib
 THREADLIBS = 

@@ -59,8 +59,8 @@
 
 #include "threads.h"
 
-extern void internal_lock_mutex(mutex_t *mutex);
-extern void internal_unlock_mutex(mutex_t *mutex);
+extern void internal_lock_mutex (mutex_t *mutex);
+extern void internal_unlock_mutex (mutex_t *mutex);
 
 /* Structure for a node in an AVL tree. */
 typedef struct avl_node
@@ -84,9 +84,9 @@ typedef struct avl_traverser
 /* Function types. */
 #if !AVL_FUNC_TYPES
 #define AVL_FUNC_TYPES 1
-typedef int (*avl_comparison_func)(const void *a, const void *b, void *param);
-typedef void (*avl_node_func)(void *data, void *param);
-typedef void *(*avl_copy_func)(void *data, void *param);
+typedef int (*avl_comparison_func) (const void *a, const void *b, void *param);
+typedef void (*avl_node_func) (void *data, void *param);
+typedef void *(*avl_copy_func) (void *data, void *param);
 #endif
 
 /* Structure which holds information about an AVL tree. */
@@ -109,56 +109,55 @@ typedef struct avl_tree
 #endif
 
 /* General functions. */
-avl_tree *avl_create(MAYBE_ARENA avl_comparison_func, void *param);
-avl_tree *avl_create_nl(MAYBE_ARENA avl_comparison_func, void *param);
-void avl_destroy(avl_tree *, avl_node_func);
-int avl_count(const avl_tree *);
-avl_tree *avl_copy(MAYBE_ARENA avl_tree *, avl_copy_func);
-void *avl_traverse(avl_tree *, avl_traverser *);
-void **avl_probe(avl_tree *, void *);
-void *avl_delete(avl_tree *, const void *);
-void *avl_find(avl_tree *, const void *);
-void *avl_find_close(avl_tree *, const void *);
+avl_tree *avl_create (MAYBE_ARENA avl_comparison_func, void *param);
+avl_tree *avl_create_nl (MAYBE_ARENA avl_comparison_func, void *param);
+void avl_destroy (avl_tree *, avl_node_func);
+int avl_count (const avl_tree *);
+avl_tree *avl_copy (MAYBE_ARENA avl_tree *, avl_copy_func);
+void *avl_traverse (avl_tree *, avl_traverser *);
+void **avl_probe (avl_tree *, void *);
+void *avl_delete (avl_tree *, const void *);
+void *avl_find (avl_tree *, const void *);
+void *avl_find_close (avl_tree *, const void *);
 
 #if __GCC__ >= 2
 extern inline void *
-avl_insert(avl_tree *tree, void *item)
+avl_insert (avl_tree *tree, void *item)
 {
-  void **p = avl_probe(tree, item);
+  void **p = avl_probe (tree, item);
   return (*p == item) ? NULL : *p;
 }
 
 extern inline void *
-avl_replace(avl_tree *tree, void *item)
+avl_replace (avl_tree *tree, void *item)
 {
-  void **p = avl_probe(tree, item);
+  void **p = avl_probe (tree, item);
   if (*p == item)
     return NULL;
   else
-  {
-    void *r = *p;
-    *p = item;
-    return r;
-  }
+    {
+      void *r = *p;
+      *p = item;
+      return r;
+    }
 }
 #else
-void *avl_insert(avl_tree *tree, void *item);
-void *avl_replace(avl_tree *tree, void *item);
+void *avl_insert (avl_tree *tree, void *item);
+void *avl_replace (avl_tree *tree, void *item);
 #endif
 
 #ifndef NDEBUG
-#define avl_force_insert(A, B)  \
-  do                            \
-  {                             \
-    void *r = avl_insert(A, B); \
-    assert(r == NULL);          \
-  } while (0)
-void *avl_force_delete(avl_tree *, void *);
+#define avl_force_insert(A, B)                                                \
+  do                                                                          \
+    {                                                                         \
+      void *r = avl_insert (A, B);                                            \
+      assert (r == NULL);                                                     \
+    }                                                                         \
+  while (0)
+void *avl_force_delete (avl_tree *, void *);
 #else
-#define avl_force_insert(A, B) \
-  avl_insert(A, B)
-#define avl_force_delete(A, B) \
-  avl_delete(A, B)
+#define avl_force_insert(A, B) avl_insert (A, B)
+#define avl_force_delete(A, B) avl_delete (A, B)
 #endif
 
 #endif
@@ -168,18 +167,18 @@ void *avl_force_delete(avl_tree *, void *);
 #ifndef __AVL_FUNCTIONS_H
 #define __AVL_FUNCTIONS_H
 
-int compare_users(const void *first, const void *second, void *param);
-int compare_mounts(const void *first, const void *second, void *param);
-int compare_vars(const void *first, const void *second, void *param);
-int compare_strings(const void *first, const void *second, void *param);
-int compare_connection(const void *first, const void *second, void *param);
-int compare_threads(const void *first, const void *second, void *param);
-int compare_mutexes(const void *first, const void *second, void *param);
-int compare_mem(const void *first, const void *second, void *param);
-int compare_sockets(const void *first, const void *second, void *param);
-void free_connection(void *data, void *param);
-void zero_trav(avl_traverser *trav);
-void *avl_get_any_node(avl_tree *tree);
+int compare_users (const void *first, const void *second, void *param);
+int compare_mounts (const void *first, const void *second, void *param);
+int compare_vars (const void *first, const void *second, void *param);
+int compare_strings (const void *first, const void *second, void *param);
+int compare_connection (const void *first, const void *second, void *param);
+int compare_threads (const void *first, const void *second, void *param);
+int compare_mutexes (const void *first, const void *second, void *param);
+int compare_mem (const void *first, const void *second, void *param);
+int compare_sockets (const void *first, const void *second, void *param);
+void free_connection (void *data, void *param);
+void zero_trav (avl_traverser *trav);
+void *avl_get_any_node (avl_tree *tree);
 #endif
 
 /* avl_h */
