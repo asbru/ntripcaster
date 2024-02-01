@@ -41,6 +41,8 @@
 #ifndef __ICECAST_CLIENT_H
 #define __ICECAST_CLIENT_H
 
+#include "ntripcaster.h"
+
 void client_login (connection_t *con, char *line);
 void put_client (connection_t *con);
 client_t *create_client ();

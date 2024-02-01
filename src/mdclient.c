@@ -3,54 +3,98 @@
 
 //  Lets us build this source without creating a library
 #include "mdcliapi.c"
-#include "ntripcaster.h"
 
 /* basic.c. ajd ****************************************************/
 
-extern server_info_t info;
+char *MDP_SERVICE_PNT = "avc.rpc.pnt";
+char *MDP_SERVICE_INF = "avc.rpc.inf";
+char *CELL_DUMMY = "VC00000";
 
-const char *MDP_SERVICE_PNT = "avc.rpc.pnt";
+typedef struct mdp_point_t
+{
+  char name[7];
+  double lat; // Latitude of point
+  double lon; // Longitude of point
+  double hgt; // Height of point
+} mdp_point_t;
+
 /* --- */
 
 int
-get_closest_cell (double lat, double lon, int verbose, char *cell_name)
+get_closest_cell (mdp_point_t *pnt, mdp_point_t *cll)
 {
-  mdcli_t *session = mdcli_new (info.mdp_url, verbose);
-  zmsg_t *request = zmsg_new ();
+  int rc;
+  int verbose = 1;
   char buf[32];
+  mdcli_t *session = mdcli_new ("tcp://127.0.0.1:5554", verbose);
   zmsg_t *request = zmsg_new ();
-  sprintf (buf, "%.7f", lat);
-  zmsg_pushstr (request, buf);
-  sprintf (buf, "%.7f", lon);
-  zmsg_pushstr (request, buf);
+  char *cell_id_mdp;
+  zmsg_addstrf (request, "%.7f", pnt->lat);
+  zmsg_addstrf (request, "%.7f", pnt->lon);
   zmsg_t *msg = mdcli_send (session, MDP_SERVICE_PNT, &request);
+  zframe_t *frame;
   if (msg)
     {
-      // Read header
-      zframe_t *header_frame = zmsg_pop (msg);
-      char *header_data = zframe_strdup (header_frame);
-      zclock_log ("header %s", header_data);
-      zframe_destroy (&header_frame);
-
-      // Reat Latitude
-      zframe_t *lat_frame = zmsg_pop (msg);
-      char *lat_data = zframe_strdup (lat_frame);
-      zclock_log ("lat %s", lat_data);
-      zframe_destroy (lat_frame);
-
-      // Reat Longitude
-      zclock_log ("header %s", header_data);
-      zframe_t *lon_frame = zmsg_pop (msg);
-      char *lon_data = zframe_strdup (lon_frame);
-      zclock_log ("lat %s", lon_data);
-      zframe_destroy (lon_frame);
-
+      // Cell-Id
+      frame = zmsg_pop (msg);
+      cell_id_mdp = zframe_strdup (frame);
+      // Cell-Action
+      frame = zmsg_pop (msg);
+      char *cell_action_data = zframe_strdup (frame);
+      // Cell-Change
+      frame = zmsg_pop (msg);
+      char *cell_change_data = zframe_strdup (frame);
       zmsg_destroy (&msg);
-      return 0;
+      rc = 0;
     }
   else
     {
-      strcpy (cell_name, "VC00000");
-      return -1;
+      rc = -1;
     }
+
+  if (strncasecmp (cell_id_mdp, CELL_DUMMY, 7) == 0)
+    rc = -2;
+
+  if (rc == 0)
+    {
+      request = zmsg_new ();
+      zmsg_addstrf (request, cell_id_mdp);
+      msg = mdcli_send (session, MDP_SERVICE_INF, &request);
+      if (msg)
+        {
+          // Cell-Id
+          frame = zmsg_pop (msg);
+          // Cell-Latitude
+          frame = zmsg_pop (msg);
+          char *lat = zframe_strdup (frame);
+          cll->lat = atof (lat);
+          // Cell-Longitude
+          frame = zmsg_pop (msg);
+          char *lon = zframe_strdup (frame);
+          cll->lon = atof (lon);
+          // Cell-Height
+          frame = zmsg_pop (msg);
+          char *hgt = zframe_strdup (frame);
+          cll->hgt = atof (hgt);
+          rc = 0;
+
+          strncpy (cll->name, cell_id_mdp, 7);
+          cll->name[7] = '\0';
+        }
+      else
+        rc = -3;
+    }
+
+  return rc;
+}
+
+int
+main ()
+{
+  struct mdp_point_t pnt = { "CLI-123", 48.0, 16.0, 100.0 };
+  struct mdp_point_t cll = { "", 0.0, 0.0, 0.0 };
+  strncpy (cll.name, CELL_DUMMY, 7);
+  cll.name[7] = '\0';
+  int rc = get_closest_cell (&pnt, &cll);
+  zclock_log ("%s, %.7f, %.7f, %.3f", cll.name, cll.lat, cll.lon, cll.hgt);
 }

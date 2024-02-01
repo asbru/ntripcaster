@@ -4,6 +4,8 @@
     "files.associations": {
         "exception": "c",
         "definitions.h": "c",
-        "config.h": "c"
+        "config.h": "c",
+        "avl.h": "c",
+        "ntripcaster.h": "c"
     }
 }

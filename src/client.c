@@ -142,6 +142,7 @@ client_auto_select_station (void *conarg)
   sock_set_blocking (con->sock, SOCK_NONBLOCK);
 
   char gpgga[BUFSIZE];
+  char *last_cell = "VC00000";
 
   double last_change_xyz[3];
   client->last_change_pos.lat = 0.0;
@@ -229,6 +230,8 @@ client_auto_select_station (void *conarg)
                   client->last_change_pos.lat = client->pos.lat;
                   client->last_change_pos.lng = client->pos.lng;
                   client->last_change_pos.height = client->pos.height;
+
+                  last_cell = "VC00000";
                 }
             }
           thread_mutex_unlock (&client->mutex);

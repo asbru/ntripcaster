@@ -80,6 +80,12 @@
 #define open _open
 #endif
 
+#ifdef USE_CRYPT
+#if USE_CRYPT == 1
+#include "crypt.h"
+#endif
+#endif
+
 #include "avl.h"
 #include "client.h"
 #include "connection.h"

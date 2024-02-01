@@ -41,6 +41,8 @@
 #ifndef __ICECAST_CONNECTION_H
 #define __ICECAST_CONNECTION_H
 
+#include "ntripcaster.h"
+
 void *handle_connection (void *data);
 connection_t *get_connection (int *sock);
 connection_t *create_connection ();
@@ -76,7 +78,10 @@ void pool_cleaner ();
 #endif
 
 #define SOCK_BLOCK 0
+
+#ifndef SOCK_NONBLOCK
 #define SOCK_NONBLOCK 1
+#endif
 
 struct hostent *ice_gethostbyname (const char *hostname, struct hostent *res,
                                    char *buffer, int buflen, int *error);
