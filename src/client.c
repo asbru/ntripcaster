@@ -275,8 +275,9 @@ client_login (connection_t *con, char *expr)
         }
       else
         {
-          if (ice_strncmp (line, "Host:", 5) == 0
-              || (ice_strncmp (line, "HOST:", 5) == 0))
+          /*if (ice_strncmp (line, "Host:", 5) == 0
+              || (ice_strncmp (line, "HOST:", 5) == 0))*/
+          if (strncasecmp (line, "Host:", 5) == 0)
             build_request (line, &req);
           else
             extract_header_vars (line, con->headervars);
