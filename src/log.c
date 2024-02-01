@@ -17,7 +17,7 @@
  * For latest information and updates, access:
  * http://igs.ifag.de/index_ntrip.htm
  *
-* Georg Weber 
+ * Georg Weber
  * BKG, Frankfurt, Germany, June 2003-06-13
  * E-mail: euref-ip@bkg.bund.de
  *
@@ -48,12 +48,12 @@
 
 #include "definitions.h"
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <stdlib.h>
 #include <errno.h>
 #include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -65,23 +65,23 @@
 #define read _read
 #define close _close
 #else
-#include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/socket.h>
 #endif
 
 #include <fcntl.h>
 
 #include "avl.h"
-#include "threads.h"
-#include "ntripcaster.h"
-#include "log.h"
-#include "sock.h"
-#include "utility.h"
-#include "ntrip_string.h"
-#include "timer.h"
-#include "main.h"
-#include "connection.h"
 #include "client.h"
+#include "connection.h"
+#include "log.h"
+#include "main.h"
+#include "ntrip_string.h"
+#include "ntripcaster.h"
+#include "sock.h"
+#include "threads.h"
+#include "timer.h"
+#include "utility.h"
 
 /* logtime.c. ajd **********************************************************/
 
@@ -98,232 +98,253 @@
 extern int errno, running;
 extern server_info_t info;
 
-int get_log_fd(int whichlog)
+int
+get_log_fd (int whichlog)
 {
-	if (info.logfile != -1)
-		return info.logfile;
+  if (info.logfile != -1)
+    return info.logfile;
 
-	return -1;
+  return -1;
 }
 
-void write_log(int whichlog, char *fmt, ...)
+void
+write_log (int whichlog, char *fmt, ...)
 {
-	char buf[BUFSIZE];
-	va_list ap;
-	char *logtime;
-	mythread_t *mt = thread_check_created();
-	int fd = get_log_fd(whichlog);
+  char buf[BUFSIZE];
+  va_list ap;
+  char *logtime;
+  mythread_t *mt = thread_check_created ();
+  int fd = get_log_fd (whichlog);
 
-	va_start(ap, fmt);
-	vsnprintf(buf, BUFSIZE, fmt, ap);
+  va_start (ap, fmt);
+  vsnprintf (buf, BUFSIZE, fmt, ap);
 
-	if (!mt)
-		fprintf(stderr, "WARNING: No mt while outputting [%s]", buf);
+  if (!mt)
+    fprintf (stderr, "WARNING: No mt while outputting [%s]", buf);
 
-	logtime = get_log_time();
+  logtime = get_log_time ();
 
-	if (strstr(buf, "%s") != NULL)
-	{
-		fprintf(stderr, "WARNING, write_log () called with '%%s' formatted string [%s]!", buf);
-		free(logtime);
-		return;
-	}
+  if (strstr (buf, "%s") != NULL)
+    {
+      fprintf (
+          stderr,
+          "WARNING, write_log () called with '%%s' formatted string [%s]!",
+          buf);
+      free (logtime);
+      return;
+    }
 
-	if (mt && fd != -1)
-	{
-		if ((whichlog != LOG_DEFAULT) || (info.logfiledebuglevel > -1))
-		{
-			fd_write(fd, "[%s] [%d:%s] %s\n", logtime, mt->id, nullcheck_string(mt->name), buf);
-		}
-	}
+  if (mt && fd != -1)
+    {
+      if ((whichlog != LOG_DEFAULT) || (info.logfiledebuglevel > -1))
+        {
+          fd_write (fd, "[%s] [%d:%s] %s\n", logtime, mt->id,
+                    nullcheck_string (mt->name), buf);
+        }
+    }
 
-	if (whichlog != LOG_DEFAULT)
-	{
-		free(logtime);
-		va_end(ap);
-		return;
-	}
+  if (whichlog != LOG_DEFAULT)
+    {
+      free (logtime);
+      va_end (ap);
+      return;
+    }
 
-	if (running == SERVER_RUNNING)
-	{
-		printf("\r[%s] %s\n", logtime, buf);
-		fflush(stdout);
-	}
-	else
-		fprintf(stderr, "[%s] %s\n", logtime, buf);
+  if (running == SERVER_RUNNING)
+    {
+      printf ("\r[%s] %s\n", logtime, buf);
+      fflush (stdout);
+    }
+  else
+    fprintf (stderr, "[%s] %s\n", logtime, buf);
 
-	if (logtime)
-		free(logtime);
-	va_end(ap);
+  if (logtime)
+    free (logtime);
+  va_end (ap);
 }
 
-void log_no_thread(int whichlog, char *fmt, ...)
+void
+log_no_thread (int whichlog, char *fmt, ...)
 {
-	char buf[BUFSIZE];
-	va_list ap;
-	char *logtime;
-	int fd = get_log_fd(whichlog);
+  char buf[BUFSIZE];
+  va_list ap;
+  char *logtime;
+  int fd = get_log_fd (whichlog);
 
-	va_start(ap, fmt);
-	vsnprintf(buf, BUFSIZE, fmt, ap);
+  va_start (ap, fmt);
+  vsnprintf (buf, BUFSIZE, fmt, ap);
 
-	logtime = get_log_time();
+  logtime = get_log_time ();
 
-	if (strstr(buf, "%s") != NULL)
-	{
-		fprintf(stderr, "WARNING, write_log () called with '%%s' formatted string [%s]!", buf);
-		logtime = get_log_time();
-		return;
-	}
+  if (strstr (buf, "%s") != NULL)
+    {
+      fprintf (
+          stderr,
+          "WARNING, write_log () called with '%%s' formatted string [%s]!",
+          buf);
+      logtime = get_log_time ();
+      return;
+    }
 
-	if (fd != -1)
-	{
-		if ((whichlog != LOG_DEFAULT) || (info.logfiledebuglevel > -1))
-		{
-			fd_write(fd, "[%s] %s\n", logtime, buf);
-		}
-	}
+  if (fd != -1)
+    {
+      if ((whichlog != LOG_DEFAULT) || (info.logfiledebuglevel > -1))
+        {
+          fd_write (fd, "[%s] %s\n", logtime, buf);
+        }
+    }
 
-	if (whichlog != LOG_DEFAULT)
-	{
-		free(logtime);
-		va_end(ap);
-		return;
-	}
+  if (whichlog != LOG_DEFAULT)
+    {
+      free (logtime);
+      va_end (ap);
+      return;
+    }
 
-	if (running == SERVER_RUNNING)
-	{
-		printf("\r[%s] %s\n", logtime, buf);
-		fflush(stdout);
-	}
-	else
-		fprintf(stderr, "[%s] %s\n", logtime, buf);
+  if (running == SERVER_RUNNING)
+    {
+      printf ("\r[%s] %s\n", logtime, buf);
+      fflush (stdout);
+    }
+  else
+    fprintf (stderr, "[%s] %s\n", logtime, buf);
 
-	if (logtime)
-		free(logtime);
-	va_end(ap);
+  if (logtime)
+    free (logtime);
+  va_end (ap);
 }
 
-void xa_debug(int level, char *fmt, ...)
+void
+xa_debug (int level, char *fmt, ...)
 {
-	char buf[BUFSIZE];
-	va_list ap;
-	char *logtime = NULL;
-	mythread_t *mt = thread_check_created();
+  char buf[BUFSIZE];
+  va_list ap;
+  char *logtime = NULL;
+  mythread_t *mt = thread_check_created ();
 #ifdef OPTIMIZE
-	return;
+  return;
 #endif
-	va_start(ap, fmt);
-	vsnprintf(buf, BUFSIZE, fmt, ap);
+  va_start (ap, fmt);
+  vsnprintf (buf, BUFSIZE, fmt, ap);
 
-	if (!mt)
-		fprintf(stderr, "WARNING: No mt while outputting [%s]", buf);
+  if (!mt)
+    fprintf (stderr, "WARNING: No mt while outputting [%s]", buf);
 
-	logtime = get_log_time();
+  logtime = get_log_time ();
 
-	if (!mt)
-		return;
+  if (!mt)
+    return;
 
 #ifdef DEBUG_FULL
-	fprintf(stderr, "\r[%s] [%ld:%s] %s\n", logtime, mt->id, nullcheck_string(mt->name), buf);
+  fprintf (stderr, "\r[%s] [%ld:%s] %s\n", logtime, mt->id,
+           nullcheck_string (mt->name), buf);
 #endif
 
-	if (strstr(buf, "%s") != NULL)
-	{
-		fprintf(stderr, "WARNING, xa_debug() called with '%%s' formatted string [%s]!", buf);
-		return;
-	}
+  if (strstr (buf, "%s") != NULL)
+    {
+      fprintf (stderr,
+               "WARNING, xa_debug() called with '%%s' formatted string [%s]!",
+               buf);
+      return;
+    }
 
-	if (info.logfiledebuglevel >= level)
-		if (info.logfile != -1)
-		{
-			fd_write(info.logfile, "[%s] [%ld:%s] %s\n", logtime, mt->id, nullcheck_string(mt->name), buf);
-		}
+  if (info.logfiledebuglevel >= level)
+    if (info.logfile != -1)
+      {
+        fd_write (info.logfile, "[%s] [%ld:%s] %s\n", logtime, mt->id,
+                  nullcheck_string (mt->name), buf);
+      }
 
-	if (info.consoledebuglevel >= level)
-	{
-		printf("\r[%s] [%ld:%s] %s\n", logtime, mt->id, nullcheck_string(mt->name), buf);
-		fflush(stdout);
-	}
+  if (info.consoledebuglevel >= level)
+    {
+      printf ("\r[%s] [%ld:%s] %s\n", logtime, mt->id,
+              nullcheck_string (mt->name), buf);
+      fflush (stdout);
+    }
 
-	if (!(running == SERVER_RUNNING))
-	{
-		if (info.consoledebuglevel >= level)
-			fprintf(stderr, "[%s] %s\n", logtime, buf);
-	}
+  if (!(running == SERVER_RUNNING))
+    {
+      if (info.consoledebuglevel >= level)
+        fprintf (stderr, "[%s] %s\n", logtime, buf);
+    }
 
-	if (logtime)
-		free(logtime);
-	va_end(ap);
+  if (logtime)
+    free (logtime);
+  va_end (ap);
 }
 
-void open_log_files()
+void
+open_log_files ()
 {
-	info.logfile = open_log_file(info.logfilename, info.logfile);
+  info.logfile = open_log_file (info.logfilename, info.logfile);
 }
 
-int open_log_file(char *name, int oldfd)
+int
+open_log_file (char *name, int oldfd)
 {
-	char *logfile;
-	int outfd;
+  char *logfile;
+  int outfd;
 
-	if (!name)
-		return -1;
+  if (!name)
+    return -1;
 
-	logfile = get_log_file(name);
+  logfile = get_log_file (name);
 
-	if (!logfile)
-		return -1;
+  if (!logfile)
+    return -1;
 
-	if (oldfd != -1)
-		fd_close(oldfd);
+  if (oldfd != -1)
+    fd_close (oldfd);
 
-	outfd = open_for_append(logfile);
+  outfd = open_for_append (logfile);
 
-	if (outfd == -1)
-	{
-		write_log(LOG_DEFAULT, "WARNING: Could not open logfile %s for writing, damn!", logfile ? logfile : "null");
-		return -1;
-	}
+  if (outfd == -1)
+    {
+      write_log (LOG_DEFAULT,
+                 "WARNING: Could not open logfile %s for writing, damn!",
+                 logfile ? logfile : "null");
+      return -1;
+    }
 
-	xa_debug(1, "DEBUG: Using logfile %s [fd %d] for %s", logfile, outfd, name);
+  xa_debug (1, "DEBUG: Using logfile %s [fd %d] for %s", logfile, outfd, name);
 
-	nfree(logfile);
+  nfree (logfile);
 
-	return outfd;
+  return outfd;
 }
 
-int fd_write(int fd, const char *fmt, ...)
+int
+fd_write (int fd, const char *fmt, ...)
 {
-	char buff[BUFSIZE];
-	va_list ap;
+  char buff[BUFSIZE];
+  va_list ap;
 
-	va_start(ap, fmt);
-	vsnprintf(buff, BUFSIZE, fmt, ap);
-	va_end(ap);
+  va_start (ap, fmt);
+  vsnprintf (buff, BUFSIZE, fmt, ap);
+  va_end (ap);
 
-	if (fd == 1 || fd == 0)
-	{
-		if (running == SERVER_RUNNING)
-		{
-			fprintf(stdout, "%s", buff);
-			fflush(stdout);
-			return 1;
+  if (fd == 1 || fd == 0)
+    {
+      if (running == SERVER_RUNNING)
+        {
+          fprintf (stdout, "%s", buff);
+          fflush (stdout);
+          return 1;
 #ifndef _WIN32
-		}
-		else
-		{
-			return write(fd, buff, ice_strlen(buff));
-		}
+        }
+      else
+        {
+          return write (fd, buff, ice_strlen (buff));
+        }
 #else
-		}
+        }
 #endif
-	}
-	else
-	{
-		return write(fd, buff, ice_strlen(buff));
-	}
-	return 0;
+    }
+  else
+    {
+      return write (fd, buff, ice_strlen (buff));
+    }
+  return 0;
 }
 
 /*
@@ -332,111 +353,117 @@ int fd_write(int fd, const char *fmt, ...)
  * Terminating \n is not put into the buffer.
  * Assert Class: 2
  */
-int fd_read_line(int fd, char *buff, const int len)
+int
+fd_read_line (int fd, char *buff, const int len)
 {
-	char c = '\0';
-	int read_bytes, pos;
+  char c = '\0';
+  int read_bytes, pos;
 
-	buff[len - 1] = ' ';
+  buff[len - 1] = ' ';
 
-	if (!buff)
-	{
-		xa_debug(1, "ERROR: fd_read_line () called with NULL storage pointer");
-		return 0;
-	}
-	else if (len <= 0)
-	{
-		xa_debug(1, "ERROR: fd_read_line () called with invalid length");
-		return 0;
-	}
+  if (!buff)
+    {
+      xa_debug (1, "ERROR: fd_read_line () called with NULL storage pointer");
+      return 0;
+    }
+  else if (len <= 0)
+    {
+      xa_debug (1, "ERROR: fd_read_line () called with invalid length");
+      return 0;
+    }
 
-	pos = 0;
-	read_bytes = read(fd, &c, 1);
+  pos = 0;
+  read_bytes = read (fd, &c, 1);
 
-	if (read_bytes < 0)
-	{
-		xa_debug(1, "DEBUG: read error on file descriptor %d [%d]", fd, errno);
-		return 0;
-	}
+  if (read_bytes < 0)
+    {
+      xa_debug (1, "DEBUG: read error on file descriptor %d [%d]", fd, errno);
+      return 0;
+    }
 
-	while ((c != '\n') && (pos < len) && (read_bytes == 1))
-	{
-		if (c != '\r')
-			buff[pos++] = c;
-		read_bytes = read(fd, &c, 1);
-	}
+  while ((c != '\n') && (pos < len) && (read_bytes == 1))
+    {
+      if (c != '\r')
+        buff[pos++] = c;
+      read_bytes = read (fd, &c, 1);
+    }
 
-	if (pos < len)
-		buff[pos] = '\0';
-	else
-	{
-		buff[len - 1] = '\0';
-		xa_debug(1, "ERROR: read line too long (exceeding BUFSIZE)");
-		return 0;
-	}
+  if (pos < len)
+    buff[pos] = '\0';
+  else
+    {
+      buff[len - 1] = '\0';
+      xa_debug (1, "ERROR: read line too long (exceeding BUFSIZE)");
+      return 0;
+    }
 
-	return ((pos > 0) || (c == '\n')) ? 1 : 0;
+  return ((pos > 0) || (c == '\n')) ? 1 : 0;
 }
 
-int fd_close(int fd)
+int
+fd_close (int fd)
 {
-	if (fd < 2)
-		xa_debug(1, "DEBUG: Closing fd %d", fd);
-	else
-		xa_debug(1, "DEBUG: Closing fd %d", fd);
+  if (fd < 2)
+    xa_debug (1, "DEBUG: Closing fd %d", fd);
+  else
+    xa_debug (1, "DEBUG: Closing fd %d", fd);
 
-	if (fd >= 0)
-	{
-		return close(fd);
-	}
-	else
-		return -1;
+  if (fd >= 0)
+    {
+      return close (fd);
+    }
+  else
+    return -1;
 }
 
-/* logtime.c. ajd ***********************************************************************/
+/* logtime.c. ajd
+ * ***********************************************************************/
 
-long get_time()
+long
+get_time ()
 {
-	return time(NULL);
+  return time (NULL);
 }
 
-char *get_log_time()
+char *
+get_log_time ()
 {
-	return get_string_time(get_time(), REGULAR_TIME);
+  return get_string_time (get_time (), REGULAR_TIME);
 }
 
-char *get_string_time(time_t tt, char *format)
+char *
+get_string_time (time_t tt, char *format)
 {
-	char *buff;
+  char *buff;
 
-	/* Don't set this to nmalloc */
-	buff = (char *)malloc(40);
-	memset(buff, 0, 40);
+  /* Don't set this to nmalloc */
+  buff = (char *)malloc (40);
+  memset (buff, 0, 40);
 
 #ifdef HAVE_LOCALTIME_R
-	{
-		struct tm mt, *pmt;
+  {
+    struct tm mt, *pmt;
 
-		if (!(pmt = localtime_r(&tt, &mt)))
-		{
-			strcpy(buff, "error");
-		}
-		else
-		{
-			if (strftime(buff, 40, format, pmt) == 0)
-				strcpy(buff, "error");
-		}
-	}
+    if (!(pmt = localtime_r (&tt, &mt)))
+      {
+        strcpy (buff, "error");
+      }
+    else
+      {
+        if (strftime (buff, 40, format, pmt) == 0)
+          strcpy (buff, "error");
+      }
+  }
 #else
-	{
-		struct tm *t;
-		/* localtime is NOT threadsafe on all platforms */
-		thread_library_lock();
-		t = localtime(&tt);
-		strftime(buff, 40, format, t);
-		thread_library_unlock();
-	}
+  {
+    struct tm *t;
+    /* localtime is NOT threadsafe on all platforms */
+    thread_library_lock ();
+    t = localtime (&tt);
+    strftime (buff, 40, format, t);
+    thread_library_unlock ();
+  }
 #endif
 
-	return buff;
+  return buff;
 }
