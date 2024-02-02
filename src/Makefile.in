@@ -104,8 +104,7 @@ PROGRAMS = $(bin_PROGRAMS)
 am_ntripcaster_OBJECTS = main.$(OBJEXT) client.$(OBJEXT) \
 	source.$(OBJEXT) connection.$(OBJEXT) log.$(OBJEXT) \
 	sock.$(OBJEXT) threads.$(OBJEXT) utility.$(OBJEXT) \
-	avl.$(OBJEXT) timer.$(OBJEXT) ntrip_string.$(OBJEXT) \
-	mdcliapi.$(OBJEXT) mdclient.$(OBJEXT)
+	avl.$(OBJEXT) timer.$(OBJEXT) ntrip_string.$(OBJEXT)
 ntripcaster_OBJECTS = $(am_ntripcaster_OBJECTS)
 ntripcaster_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -125,8 +124,7 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/avl.Po ./$(DEPDIR)/client.Po \
 	./$(DEPDIR)/connection.Po ./$(DEPDIR)/log.Po \
-	./$(DEPDIR)/main.Po ./$(DEPDIR)/mdcliapi.Po \
-	./$(DEPDIR)/mdclient.Po ./$(DEPDIR)/ntrip_string.Po \
+	./$(DEPDIR)/main.Po ./$(DEPDIR)/ntrip_string.Po \
 	./$(DEPDIR)/sock.Po ./$(DEPDIR)/source.Po \
 	./$(DEPDIR)/threads.Po ./$(DEPDIR)/timer.Po \
 	./$(DEPDIR)/utility.Po
@@ -274,12 +272,10 @@ top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = foreign
 noinst_HEADERS = avl.h client.h	definitions.h connection.h	\
 			ntrip_string.h ntripcaster.h log.h	main.h \
-			sock.h source.h threads.h timer.h utility.h \
-			mdp.h mdcliapi.h mdclient.h
+			sock.h source.h threads.h timer.h utility.h
 
 ntripcaster_SOURCES = main.c client.c source.c connection.c log.c \
-			sock.c threads.c utility.c avl.c timer.c ntrip_string.c \
-			mdcliapi.c mdclient.c
+			sock.c threads.c utility.c avl.c timer.c ntrip_string.c
 
 
 #INCLUDES = -D_REENTRANT @WRAPINCLUDES@
@@ -375,8 +371,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/connection.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/log.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mdcliapi.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mdclient.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ntrip_string.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sock.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/source.Po@am__quote@ # am--include-marker
@@ -535,8 +529,6 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/connection.Po
 	-rm -f ./$(DEPDIR)/log.Po
 	-rm -f ./$(DEPDIR)/main.Po
-	-rm -f ./$(DEPDIR)/mdcliapi.Po
-	-rm -f ./$(DEPDIR)/mdclient.Po
 	-rm -f ./$(DEPDIR)/ntrip_string.Po
 	-rm -f ./$(DEPDIR)/sock.Po
 	-rm -f ./$(DEPDIR)/source.Po
@@ -593,8 +585,6 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/connection.Po
 	-rm -f ./$(DEPDIR)/log.Po
 	-rm -f ./$(DEPDIR)/main.Po
-	-rm -f ./$(DEPDIR)/mdcliapi.Po
-	-rm -f ./$(DEPDIR)/mdclient.Po
 	-rm -f ./$(DEPDIR)/ntrip_string.Po
 	-rm -f ./$(DEPDIR)/sock.Po
 	-rm -f ./$(DEPDIR)/source.Po

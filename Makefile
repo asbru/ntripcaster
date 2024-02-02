@@ -153,7 +153,8 @@ am__define_uniq_tagged_files = \
   done | $(am__uniquify_input)`
 DIST_SUBDIRS = $(SUBDIRS)
 am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/config.h.in \
-	README.md compile depcomp install-sh missing mkinstalldirs
+	README.md acconfig.h compile depcomp install-sh missing \
+	mkinstalldirs
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -255,10 +256,10 @@ UNAME = uname
 VERSION = 0.1.16
 WRAPINCLUDES = 
 WRAPLIBS = 
-abs_builddir = /home/jurgen/Documents/Workspace/ntripcaster
-abs_srcdir = /home/jurgen/Documents/Workspace/ntripcaster
-abs_top_builddir = /home/jurgen/Documents/Workspace/ntripcaster
-abs_top_srcdir = /home/jurgen/Documents/Workspace/ntripcaster
+abs_builddir = /home/jurgen/Documents/Workspace/ntripcaster-asbru
+abs_srcdir = /home/jurgen/Documents/Workspace/ntripcaster-asbru
+abs_top_builddir = /home/jurgen/Documents/Workspace/ntripcaster-asbru
+abs_top_srcdir = /home/jurgen/Documents/Workspace/ntripcaster-asbru
 ac_ct_CC = gcc
 am__include = include
 am__leading_dot = .
@@ -277,7 +278,7 @@ host_alias =
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /home/jurgen/Documents/Workspace/ntripcaster/install-sh
+install_sh = ${SHELL} /home/jurgen/Documents/Workspace/ntripcaster-asbru/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -345,7 +346,7 @@ config.h: stamp-h1
 stamp-h1: $(srcdir)/config.h.in $(top_builddir)/config.status
 	@rm -f stamp-h1
 	cd $(top_builddir) && $(SHELL) ./config.status config.h
-$(srcdir)/config.h.in: # $(am__configure_deps) 
+$(srcdir)/config.h.in: # $(am__configure_deps) $(top_srcdir)/acconfig.h
 	($(am__cd) $(top_srcdir) && $(AUTOHEADER))
 	rm -f stamp-h1
 	touch $@

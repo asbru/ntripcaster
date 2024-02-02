@@ -186,7 +186,7 @@ typedef enum type_e
   function_e
 } type_t;
 
-#define BUFSIZE 32
+#define BUFSIZE 1000
 #define CHUNKLEN 64
 #define MAXMETADATALENGTH (100)
 #define SOURCE_BUFFSIZE 1000
@@ -390,11 +390,9 @@ typedef struct
 
   int console_mode;
 
-  char *mountposfile; // absolute location of mountpos.conf file
+  char *mountposfile;
   char *auto_mount;
-  int read_gpgga_interval; // read gga interval in seconds
-
-  char *mdp_url; // MDP Broker url, tpc://<mdp_broker_host>:<mdp_broker_port>
+  int read_gpgga_interval;
 
 } server_info_t;
 

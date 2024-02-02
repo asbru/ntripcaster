@@ -71,7 +71,6 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
-
 #ifdef TIME_WITH_SYS_TIME
 #include <sys/time.h>
 #endif
@@ -83,7 +82,6 @@
 #include <sys/resource.h>
 #endif
 
-// #include "auto.h"
 #include "avl.h"
 #include "client.h"
 #include "connection.h"
@@ -159,7 +157,6 @@ main (int argc, char **argv)
 void
 increase_maximum_number_of_open_files ()
 {
-#define RLIMIT_NOFILE 6 /* max number of open files */
 #if defined(HAVE_SETRLIMIT) && defined(HAVE_GETRLIMIT)
   struct rlimit before, after;
 

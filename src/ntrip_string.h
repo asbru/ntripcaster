@@ -41,8 +41,6 @@
 #ifndef __ICECAST_ICE_STRING_H
 #define __ICECAST_ICE_STRING_H
 
-#include <stddef.h>
-
 char *splitc (char *first, char *rest, const char divider);
 char *clean_string (char *string);
 const char *con_host (connection_t *con);

@@ -1,5 +1,67 @@
 /* config.h.  Generated from config.h.in by configure.  */
 /* config.h.in.  Generated from configure.ac by autoheader.  */
+/* Whether to use crypted passwords */
+/* #undef USE_CRYPT */
+
+/* Whether to use tcp_wrappers */
+/* #undef HAVE_LIBWRAP */
+
+/* User want readline */
+/* #undef HAVE_LIBREADLINE */
+
+/* Some systems have sys/syslog.h */
+/* #undef NEED_SYS_SYSLOG_H */
+
+/* Any threads around? */
+#define HAVE_PTHREAD_H 1
+
+/* Some systems don't have assert.h */
+#define HAVE_ASSERT_H 1
+
+/* Or here? */
+/* #undef HAVE_PTHREAD_NP_H */
+
+/* We might be the silly hpux */
+/* #undef hpux */
+
+/* Are we sysv? */
+/* #undef SYSV */
+
+/* Fucked up IRIX */
+/* #undef IRIX */
+
+/* Or svr4 perhaps? */
+/* #undef SVR4 */
+
+/* Some kind of Linux */
+#define LINUX /**/
+
+/* Or perhaps some bsd variant? */
+/* #undef __SOMEBSD__ */
+
+/* UNIX98 and others want socklen_t */
+/* #undef HAVE_SOCKLEN_T */
+
+/* The complete version of ntripcaster */
+#define VERSION "0.1.16"
+
+/* Definately Solaris */
+/* #undef SOLARIS */
+
+/* directories that we use... blah blah blah */
+/* #undef ICECAST_ETCDIR */
+/* #undef ICECAST_LOGDIR */
+/* #undef ICECAST_TEMPLATEDIR */
+
+/* What the hell is this? */
+#define PACKAGE "ntripcaster"
+
+/* DAMN I HATE HATE HATE AUTOCONF */
+#define HAVE_SOCKET 1
+#define HAVE_CONNECT 1
+#define HAVE_GETHOSTBYNAME 1
+#define HAVE_NANOSLEEP 1
+/* #undef HAVE_YP_GET_DEFAULT_DOMAIN */
 
 /* Define to 1 if you have the <assert.h> header file. */
 #define HAVE_ASSERT_H 1

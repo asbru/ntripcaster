@@ -914,8 +914,7 @@ SOCKET
 sock_connect_wto (const char *hostname, const int port, const int timeout)
 {
   SOCKET sockfd;
-  struct sockaddr_in sin;
-  struct sockaddr_in server;
+  struct sockaddr_in sin, server;
   struct hostent *host;
   struct hostent hostinfo;
   char buf[BUFSIZE];

@@ -104,8 +104,7 @@ PROGRAMS = $(bin_PROGRAMS)
 am_ntripcaster_OBJECTS = main.$(OBJEXT) client.$(OBJEXT) \
 	source.$(OBJEXT) connection.$(OBJEXT) log.$(OBJEXT) \
 	sock.$(OBJEXT) threads.$(OBJEXT) utility.$(OBJEXT) \
-	avl.$(OBJEXT) timer.$(OBJEXT) ntrip_string.$(OBJEXT) \
-	mdcliapi.$(OBJEXT) mdclient.$(OBJEXT)
+	avl.$(OBJEXT) timer.$(OBJEXT) ntrip_string.$(OBJEXT)
 ntripcaster_OBJECTS = $(am_ntripcaster_OBJECTS)
 ntripcaster_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_$(V))
@@ -125,8 +124,7 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/avl.Po ./$(DEPDIR)/client.Po \
 	./$(DEPDIR)/connection.Po ./$(DEPDIR)/log.Po \
-	./$(DEPDIR)/main.Po ./$(DEPDIR)/mdcliapi.Po \
-	./$(DEPDIR)/mdclient.Po ./$(DEPDIR)/ntrip_string.Po \
+	./$(DEPDIR)/main.Po ./$(DEPDIR)/ntrip_string.Po \
 	./$(DEPDIR)/sock.Po ./$(DEPDIR)/source.Po \
 	./$(DEPDIR)/threads.Po ./$(DEPDIR)/timer.Po \
 	./$(DEPDIR)/utility.Po
@@ -228,10 +226,10 @@ UNAME = uname
 VERSION = 0.1.16
 WRAPINCLUDES = 
 WRAPLIBS = 
-abs_builddir = /home/jurgen/Documents/Workspace/ntripcaster/src
-abs_srcdir = /home/jurgen/Documents/Workspace/ntripcaster/src
-abs_top_builddir = /home/jurgen/Documents/Workspace/ntripcaster
-abs_top_srcdir = /home/jurgen/Documents/Workspace/ntripcaster
+abs_builddir = /home/jurgen/Documents/Workspace/ntripcaster-asbru/src
+abs_srcdir = /home/jurgen/Documents/Workspace/ntripcaster-asbru/src
+abs_top_builddir = /home/jurgen/Documents/Workspace/ntripcaster-asbru
+abs_top_srcdir = /home/jurgen/Documents/Workspace/ntripcaster-asbru
 ac_ct_CC = gcc
 am__include = include
 am__leading_dot = .
@@ -250,7 +248,7 @@ host_alias =
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /home/jurgen/Documents/Workspace/ntripcaster/install-sh
+install_sh = ${SHELL} /home/jurgen/Documents/Workspace/ntripcaster-asbru/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -274,12 +272,10 @@ top_srcdir = ..
 AUTOMAKE_OPTIONS = foreign
 noinst_HEADERS = avl.h client.h	definitions.h connection.h	\
 			ntrip_string.h ntripcaster.h log.h	main.h \
-			sock.h source.h threads.h timer.h utility.h \
-			mdp.h mdcliapi.h mdclient.h
+			sock.h source.h threads.h timer.h utility.h
 
 ntripcaster_SOURCES = main.c client.c source.c connection.c log.c \
-			sock.c threads.c utility.c avl.c timer.c ntrip_string.c \
-			mdcliapi.c mdclient.c
+			sock.c threads.c utility.c avl.c timer.c ntrip_string.c
 
 
 #INCLUDES = -D_REENTRANT 
@@ -375,8 +371,6 @@ include ./$(DEPDIR)/client.Po # am--include-marker
 include ./$(DEPDIR)/connection.Po # am--include-marker
 include ./$(DEPDIR)/log.Po # am--include-marker
 include ./$(DEPDIR)/main.Po # am--include-marker
-include ./$(DEPDIR)/mdcliapi.Po # am--include-marker
-include ./$(DEPDIR)/mdclient.Po # am--include-marker
 include ./$(DEPDIR)/ntrip_string.Po # am--include-marker
 include ./$(DEPDIR)/sock.Po # am--include-marker
 include ./$(DEPDIR)/source.Po # am--include-marker
@@ -535,8 +529,6 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/connection.Po
 	-rm -f ./$(DEPDIR)/log.Po
 	-rm -f ./$(DEPDIR)/main.Po
-	-rm -f ./$(DEPDIR)/mdcliapi.Po
-	-rm -f ./$(DEPDIR)/mdclient.Po
 	-rm -f ./$(DEPDIR)/ntrip_string.Po
 	-rm -f ./$(DEPDIR)/sock.Po
 	-rm -f ./$(DEPDIR)/source.Po
@@ -593,8 +585,6 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/connection.Po
 	-rm -f ./$(DEPDIR)/log.Po
 	-rm -f ./$(DEPDIR)/main.Po
-	-rm -f ./$(DEPDIR)/mdcliapi.Po
-	-rm -f ./$(DEPDIR)/mdclient.Po
 	-rm -f ./$(DEPDIR)/ntrip_string.Po
 	-rm -f ./$(DEPDIR)/sock.Po
 	-rm -f ./$(DEPDIR)/source.Po

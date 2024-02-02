@@ -61,10 +61,7 @@ typedef struct ice_socket_St
 #endif
 
 #define SOCK_BLOCK 0
-
-#ifndef SOCK_NONBLOCK
 #define SOCK_NONBLOCK 1
-#endif
 
 #ifdef _WIN32
 int inet_aton (const char *s, struct in_addr *a);

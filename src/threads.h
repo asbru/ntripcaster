@@ -17,7 +17,7 @@
  * For latest information and updates, access:
  * http://igs.ifag.de/index_ntrip.htm
  *
-* Georg Weber 
+ * Georg Weber
  * BKG, Frankfurt, Germany, June 2003-06-13
  * E-mail: euref-ip@bkg.bund.de
  *
@@ -57,22 +57,22 @@ typedef pthread_t icethread_t;
 
 typedef struct icemutex_St
 {
-	long int thread_id;
+  long int thread_id;
 #ifndef _WIN32
-	pthread_mutex_t mutex;
+  pthread_mutex_t mutex;
 #else
-	win32_mutex_t mutex;
+  win32_mutex_t mutex;
 #endif
-	long int mutexid;
-	int lineno;
-	long int id;
+  long int mutexid;
+  int lineno;
+  long int id;
 } mutex_t;
 
-#define thread_create(n, x, y) thread_create_c(n, x, y, __LINE__, __FILE__);
-#define thread_create_mutex(x) thread_create_mutex_c(x, __LINE__, __FILE__);
-#define thread_mutex_lock(x) thread_mutex_lock_c(x, __LINE__, __FILE__);
-#define thread_mutex_unlock(x) thread_mutex_unlock_c(x, __LINE__, __FILE__);
-#define thread_exit(x) thread_exit_c(x, __LINE__, __FILE__);
+#define thread_create(n, x, y) thread_create_c (n, x, y, __LINE__, __FILE__);
+#define thread_create_mutex(x) thread_create_mutex_c (x, __LINE__, __FILE__);
+#define thread_mutex_lock(x) thread_mutex_lock_c (x, __LINE__, __FILE__);
+#define thread_mutex_unlock(x) thread_mutex_unlock_c (x, __LINE__, __FILE__);
+#define thread_exit(x) thread_exit_c (x, __LINE__, __FILE__);
 
 #define MUTEX_STATE_NOTLOCKED -1
 #define MUTEX_STATE_NEVERLOCKED -2
@@ -85,56 +85,58 @@ typedef struct icemutex_St
 
 typedef struct mythread_st
 {
-	icethread_t thread;
-	int line;
-	char *file;
-	char *name;
-	long int id;
-	time_t created;
-	int ping;
-	int running;
+  icethread_t thread;
+  int line;
+  char *file;
+  char *name;
+  long int id;
+  time_t created;
+  int ping;
+  int running;
 } mythread_t;
 
-void thread_lib_init();
-icethread_t thread_create_c(char *name, void *(*start_routine)(void *), void *arg, int line, char *file);
-void thread_create_mutex_c(mutex_t *mutex, int line, char *file);
-void thread_mutex_lock_c(mutex_t *mutex, int line, char *file);
-void thread_mutex_unlock_c(mutex_t *mutex, int line, char *file);
-void thread_mutex_destroy(mutex_t *mutex);
-void thread_exit_c(int val, int line, char *file);
-void internal_lock_mutex(mutex_t *mutex);
-void internal_unlock_mutex(mutex_t *mutex);
+void thread_lib_init ();
+icethread_t thread_create_c (char *name, void *(*start_routine) (void *),
+                             void *arg, int line, char *file);
+void thread_create_mutex_c (mutex_t *mutex, int line, char *file);
+void thread_mutex_lock_c (mutex_t *mutex, int line, char *file);
+void thread_mutex_unlock_c (mutex_t *mutex, int line, char *file);
+void thread_mutex_destroy (mutex_t *mutex);
+void thread_exit_c (int val, int line, char *file);
+void internal_lock_mutex (mutex_t *mutex);
+void internal_unlock_mutex (mutex_t *mutex);
 
 /*for using un-threadsafe library functions*/
-void thread_library_lock();
-void thread_library_unlock();
-#define PROTECT_CODE(code)       \
-	{                            \
-		thread_library_lock();   \
-		code;                    \
-		thread_library_unlock(); \
-	}
+void thread_library_lock ();
+void thread_library_unlock ();
+#define PROTECT_CODE(code)                                                    \
+  {                                                                           \
+    thread_library_lock ();                                                   \
+    code;                                                                     \
+    thread_library_unlock ();                                                 \
+  }
 
-void thread_init();
-void thread_wait_for_solitude();
+void thread_init ();
+void thread_wait_for_solitude ();
 
-int thread_alive(mythread_t *mt);
-void thread_block_signals();
-void thread_catch_signals();
-void thread_setup_default_attributes();
-icethread_t thread_self();
-int thread_equal(icethread_t t1, icethread_t t2);
-long thread_new();
-long thread_mutex_new();
-void thread_create_mutex_nl(mutex_t *mutex);
-mythread_t *thread_get_mythread();
-mythread_t *thread_check_created();
-void thread_mem_check(mythread_t *mt);
-void thread_rename(const char *name); /* renames current thread */
+int thread_alive (mythread_t *mt);
+void thread_block_signals ();
+void thread_catch_signals ();
+void thread_setup_default_attributes ();
+icethread_t thread_self ();
+int thread_equal (icethread_t t1, icethread_t t2);
+long thread_new ();
+long thread_mutex_new ();
+void thread_create_mutex_nl (mutex_t *mutex);
+mythread_t *thread_get_mythread ();
+mythread_t *thread_check_created ();
+void thread_mem_check (mythread_t *mt);
+void thread_rename (const char *name); /* renames current thread */
 
 #endif
 
-/* memory.h. ajd ****************************************************************************/
+/* memory.h. ajd
+ * ****************************************************************************/
 #ifndef __ICECAST_MEMORY_H
 #define __ICECAST_MEMORY_H
 
@@ -146,30 +148,30 @@ void thread_rename(const char *name); /* renames current thread */
 #include <malloc.h>
 #endif
 
-#define nmalloc(x) n_malloc(x, __LINE__, __FILE__)
-#define nfree(x)                   \
-	n_free(x, __LINE__, __FILE__); \
-	x = NULL
-#define nstrdup(x) n_strdup(x, __LINE__, __FILE__)
+#define nmalloc(x) n_malloc (x, __LINE__, __FILE__)
+#define nfree(x)                                                              \
+  n_free (x, __LINE__, __FILE__);                                             \
+  x = NULL
+#define nstrdup(x) n_strdup (x, __LINE__, __FILE__)
 
 typedef struct meminfo_t
 {
-	int line;
-	int size;
-	char file[20];
-	void *ptr;
-	int thread_id;
-	time_t time;
+  int line;
+  int size;
+  char file[20];
+  void *ptr;
+  int thread_id;
+  time_t time;
 } meminfo_t;
 
-void *n_malloc(const unsigned int size, const int lineno, const char *file);
-void n_free(void *ptr, const int lineno, const char *file);
-char *n_strdup(const char *ptr, const int lineno, const char *file);
-char *ice_cat(const char *first, const char *second);
+void *n_malloc (const unsigned int size, const int lineno, const char *file);
+void n_free (void *ptr, const int lineno, const char *file);
+char *n_strdup (const char *ptr, const int lineno, const char *file);
+char *ice_cat (const char *first, const char *second);
 
-void initialize_memory_checker();
+void initialize_memory_checker ();
 
 #ifdef HAVE_MCHECK_H
-void icecast_mcheck_status(enum mcheck_status STATUS);
+void icecast_mcheck_status (enum mcheck_status STATUS);
 #endif
 #endif

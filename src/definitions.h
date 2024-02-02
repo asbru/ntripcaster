@@ -17,7 +17,7 @@
  * For latest information and updates, access:
  * http://igs.ifag.de/index_ntrip.htm
  *
-* Georg Weber 
+ * Georg Weber
  * BKG, Frankfurt, Germany, June 2003-06-13
  * E-mail: euref-ip@bkg.bund.de
  *

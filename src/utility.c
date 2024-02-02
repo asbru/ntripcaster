@@ -80,8 +80,6 @@
 #define open _open
 #endif
 
-#include "crypt.h"
-
 #include "avl.h"
 #include "client.h"
 #include "connection.h"
@@ -1266,7 +1264,6 @@ set_element configfile_settings[] = {
   { "auto_mount", string_e, "auto-change station", NULL },
   { "read_gpgga_interval", integer_e,
     "interval for reading client gpgga message", NULL },
-  { "mdp_url", string_e, "MDP broker url", NULL },
   { (char *)NULL, 0, (char *)NULL, NULL }
 };
 
@@ -1418,8 +1415,7 @@ parse_gpgga_msg (char *gpgga_t, pos_t *position)
       return -1;
     }
 
-  if ((ice_strncmp (gpgga, "GPGGA", 5 != 0))
-      || (ice_strncmp (gpgga, "GNGGA", 5 != 0)))
+  if (ice_strncmp (gpgga, "GPGGA", 5) != 0)
     {
       write_log (LOG_DEFAULT, "ERROR: Not GPGGA message: %s\n", gpgga);
       return -1;

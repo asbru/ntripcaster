@@ -42,7 +42,6 @@
 #define __ICECAST_LOG_H
 
 #include "ntripcaster.h"
-#include <unistd.h>
 
 void write_log (int whichlog, char *fmt, ...);
 void xa_debug (int level, char *fmt, ...);

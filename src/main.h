@@ -42,7 +42,7 @@
 #define __ICECAST_MAIN_H
 
 void *threaded_server_proc (void *infoarg);
-// void client_login(connection_t *con, char *line);
+void client_login (connection_t *con, char *line);
 void setup_defaults ();
 void setup_signal_traps ();
 void allocate_resources ();

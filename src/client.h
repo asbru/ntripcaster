@@ -43,7 +43,6 @@
 
 #include "ntripcaster.h"
 
-void client_auto_select_station (void *conarg);
 void client_login (connection_t *con, char *line);
 void put_client (connection_t *con);
 client_t *create_client ();

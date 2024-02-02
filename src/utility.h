@@ -41,8 +41,6 @@
 #ifndef __ICECAST_UTILITY_H
 #define __ICECAST_UTILITY_H
 
-#include <unistd.h>
-
 typedef struct
 {
   char *name;  /* Printable name of this setting */
