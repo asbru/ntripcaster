@@ -1,14 +1,8 @@
 *.o
 *.P
-Makefile
 config.status
 config.log
 src/ntripcaster
-src/Makefile
-conf/Makefile
-Makefile.in
-src/Makefile.in
-conf/Makefile.in
 src/.deps
 autom4te.cache
 *~
