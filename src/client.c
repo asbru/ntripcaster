@@ -324,8 +324,6 @@ client_login (connection_t *con, char *expr)
           printf ("mount point not exists, auto select one\n");
           avl_traverser tmp_trav = { 0 };
           connection_t *tmp_con;
-          // make sure client does not receive wrong RTCM
-          tmp_con->food.client->virgin = CLIENT_PAUSED;
           while ((tmp_con = avl_traverse (info.sources, &tmp_trav)) != NULL)
             {
               strcpy (req.path, tmp_con->food.source->audiocast.mount);
@@ -371,6 +369,12 @@ client_login (connection_t *con, char *expr)
 
       put_client (con);
       con->food.client->type = listener_e;
+
+      if (ice_strcmp (info.auto_mount, "true") == 0)
+        {
+          con->food.client->virgin = CLIENT_PAUSED;
+        }
+
       con->food.client->source = source->food.source;
       source->food.source->stats.client_connections++;
       if (req.user[0] != '\0')
