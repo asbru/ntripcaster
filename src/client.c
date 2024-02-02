@@ -212,6 +212,7 @@ client_auto_select_station (void *conarg)
                   client->source = min_dist_con->food.source;
                   avl_insert (min_dist_con->food.source->clients, con);
                   min_dist_con->food.source->stats.client_connections++;
+                  client->virgin = 0;
                   xa_debug (2, "client [%s] change to %s\n", con_host (con),
                             client->source->audiocast.mount);
                   write_log (LOG_DEFAULT, "client [%s] change to %s\n",
@@ -323,6 +324,8 @@ client_login (connection_t *con, char *expr)
           printf ("mount point not exists, auto select one\n");
           avl_traverser tmp_trav = { 0 };
           connection_t *tmp_con;
+          // make sure client does not receive wrong RTCM
+          tmp_con->food.client->virgin = CLIENT_PAUSED;
           while ((tmp_con = avl_traverse (info.sources, &tmp_trav)) != NULL)
             {
               strcpy (req.path, tmp_con->food.source->audiocast.mount);
