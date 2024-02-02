@@ -11,3 +11,6 @@ src/Makefile.in
 conf/Makefile.in
 src/.deps
 autom4te.cache
+*~
+.vscode
+_archive
