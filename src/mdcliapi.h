@@ -6,7 +6,6 @@
 #ifndef __MDCLIAPI_H_INCLUDED__
 #define __MDCLIAPI_H_INCLUDED__
 
-#include "mdp.h"
 #include <czmq.h>
 
 #ifdef __cplusplus

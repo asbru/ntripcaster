@@ -2,13 +2,13 @@
 //  Uses the mdcli API to hide all MDP aspects
 
 //  Lets us build this source without creating a library
+
+#ifndef __MDCLIENT_H_INCLUDED__
+#define __MDCLIENT_H_INCLUDED__
+
 #include "mdcliapi.h"
 
 /* basic.c. ajd ****************************************************/
-
-char *MDP_SERVICE_PNT = "avc.rpc.pnt";
-char *MDP_SERVICE_INF = "avc.rpc.inf";
-char *CELL_DUMMY = "VC00000";
 
 typedef struct mdp_point_t
 {
@@ -19,3 +19,5 @@ typedef struct mdp_point_t
 } mdp_point_t;
 
 int get_closest_cell (mdp_point_t *pnt, mdp_point_t *cll);
+
+#endif

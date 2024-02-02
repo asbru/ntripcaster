@@ -2,9 +2,14 @@
 //  Uses the mdcli API to hide all MDP aspects
 
 //  Lets us build this source without creating a library
+
 #include "mdclient.h"
 
 /* basic.c. ajd ****************************************************/
+
+char *MDP_SERVICE_PNT = "avc.rpc.pnt";
+char *MDP_SERVICE_INF = "avc.rpc.inf";
+char *CELL_DUMMY = "VC00000";
 
 /* --- */
 

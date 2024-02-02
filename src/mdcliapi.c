@@ -2,6 +2,7 @@
 //  Implements the MDP/Worker spec at http://rfc.zeromq.org/spec:7.
 
 #include "mdcliapi.h"
+#include "mdp.h"
 
 //  Structure of our class
 //  We access these properties only via class methods
