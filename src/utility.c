@@ -1401,31 +1401,32 @@ parse_config_file (char *file)
 }
 // paser gpgga message
 int
-parse_gpgga_msg (char *gpgga_t, pos_t *position)
+parse_gga_msg (char *gga_t, pos_t *position)
 {
   char item[BUFSIZE];
-  char gpgga[BUFSIZE];
+  char gga[BUFSIZE];
   int dd = 0;
   double mm = 0.0;
   double ddmm = 0.0;
-  snprintf (gpgga, BUFSIZE, "%s", gpgga_t);
+  snprintf (gga, BUFSIZE, "%s", gga_t);
   int i = 0;
-  if (splitc (NULL, gpgga, '$') == NULL)
+  if (splitc (NULL, gga, '$') == NULL)
     {
       return -1;
     }
 
-  if (ice_strncmp (gpgga, "GPGGA", 5) != 0)
+  if ((ice_strncmp (gga, "GPGGA", 5) != 0)
+      || ice_strncmp (gga, "GNGGA", 5) != 0)
     {
-      write_log (LOG_DEFAULT, "ERROR: Not GPGGA message: %s\n", gpgga);
+      write_log (LOG_DEFAULT, "ERROR: Not GPGGA message: %s\n", gga);
       return -1;
     }
   for (i = 0; i < 10; ++i)
     {
-      if (splitc (item, gpgga, ',') == NULL)
+      if (splitc (item, gga, ',') == NULL)
         {
           write_log (LOG_DEFAULT, "ERROR: Wrong GPGGA message format: %s\n",
-                     gpgga);
+                     gga);
           return -1;
         }
       switch (i)

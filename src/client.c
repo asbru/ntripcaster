@@ -142,7 +142,7 @@ client_auto_select_station (void *conarg)
 
   sock_set_blocking (con->sock, SOCK_NONBLOCK);
 
-  char gpgga[BUFSIZE];
+  char gga[BUFSIZE];
 
   double last_change_xyz[3];
   client->last_change_pos.lat = 0.0;
@@ -153,9 +153,9 @@ client_auto_select_station (void *conarg)
          && con->food.client->alive != CLIENT_DEAD)
     {
 
-      len = sock_read_lines (con->sock, gpgga, BUFSIZE);
+      len = sock_read_lines (con->sock, gga, BUFSIZE);
       pos_t pos;
-      if (parse_gpgga_msg (gpgga, &pos) != 0)
+      if (parse_gga_msg (gga, &pos) != 0)
         {
           continue;
         }

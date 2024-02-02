@@ -115,7 +115,7 @@ void write_http_header (sock_t sockfd, int error, const char *msg);
 source_t *source_with_client (connection_t *con);
 
 // add for gpgga
-int parse_gpgga_msg (char *gpgga_t, pos_t *position);
+int parse_gga_msg (char *gpgga_t, pos_t *position);
 double compute_distance_xyz (double pos1[3], double pos2[3]);
 void llh2xyz (const double longitude, const double latitude,
               const double height, double (*r_xzy)[3]);
