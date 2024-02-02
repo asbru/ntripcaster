@@ -1416,7 +1416,7 @@ parse_gga_msg (char *gga_t, pos_t *position)
     }
 
   if ((ice_strncmp (gga, "GPGGA", 5) != 0)
-      || ice_strncmp (gga, "GNGGA", 5) != 0)
+      && ice_strncmp (gga, "GNGGA", 5) != 0)
     {
       write_log (LOG_DEFAULT, "ERROR: Not GPGGA message: %s\n", gga);
       return -1;
