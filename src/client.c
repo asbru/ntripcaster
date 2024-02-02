@@ -119,7 +119,6 @@ void
 client_auto_select_station (void *conarg)
 {
   client_t *client;
-  int len = 0;
   avl_traverser trav = { 0 };
   connection_t *sourcecon, *con = (connection_t *)conarg;
   connection_t *min_dist_con = NULL;
@@ -142,7 +141,7 @@ client_auto_select_station (void *conarg)
   sock_set_blocking (con->sock, SOCK_NONBLOCK);
 
   char gpgga[BUFSIZE];
-  char *last_cell = "VC00000";
+  // char *last_cell = "VC00000";
 
   double last_change_xyz[3];
   client->last_change_pos.lat = 0.0;
@@ -153,7 +152,7 @@ client_auto_select_station (void *conarg)
          && con->food.client->alive != CLIENT_DEAD)
     {
 
-      len = sock_read_lines (con->sock, gpgga, BUFSIZE);
+      sock_read_lines (con->sock, gpgga, BUFSIZE);
       pos_t pos;
       if (parse_gpgga_msg (gpgga, &pos) != 0)
         {
@@ -231,7 +230,7 @@ client_auto_select_station (void *conarg)
                   client->last_change_pos.lng = client->pos.lng;
                   client->last_change_pos.height = client->pos.height;
 
-                  last_cell = "VC00000";
+                  // last_cell = "VC00000";
                 }
             }
           thread_mutex_unlock (&client->mutex);

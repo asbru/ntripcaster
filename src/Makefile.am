@@ -6,12 +6,15 @@ bin_PROGRAMS = ntripcaster
 
 noinst_HEADERS = avl.h client.h	definitions.h connection.h	\
 			ntrip_string.h ntripcaster.h log.h	main.h \
-			sock.h source.h threads.h timer.h utility.h
+			sock.h source.h threads.h timer.h utility.h \
+			mdp.h mdcliapi.h mdclient.h
 
 ntripcaster_SOURCES = main.c client.c source.c connection.c log.c \
-			sock.c threads.c utility.c avl.c timer.c ntrip_string.c
+			sock.c threads.c utility.c avl.c timer.c ntrip_string.c \
+			mdcliapi.c mdclient.c
 
-INCLUDES = -D_REENTRANT @WRAPINCLUDES@
+#INCLUDES = -D_REENTRANT @WRAPINCLUDES@
+AM_CPPFLAGS = -D_REENTRANT @WRAPINCLUDES@ 
 
 bindir=$(NTRIPCASTER_BINDIR)
 

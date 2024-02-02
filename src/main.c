@@ -83,6 +83,7 @@
 #include <sys/resource.h>
 #endif
 
+// #include "auto.h"
 #include "avl.h"
 #include "client.h"
 #include "connection.h"

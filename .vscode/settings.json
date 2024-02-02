@@ -6,6 +6,13 @@
         "definitions.h": "c",
         "config.h": "c",
         "avl.h": "c",
-        "ntripcaster.h": "c"
+        "ntripcaster.h": "c",
+        "client.h": "c",
+        "float.h": "c",
+        "auto.h": "c",
+        "socket.h": "c",
+        "utility.h": "c",
+        "ntrip_string.h": "c",
+        "connection.h": "c"
     }
 }

@@ -79,9 +79,9 @@ void pool_cleaner ();
 
 #define SOCK_BLOCK 0
 
-#ifndef SOCK_NONBLOCK
-#define SOCK_NONBLOCK 1
-#endif
+// #ifndef SOCK_NONBLOCK
+// #define SOCK_NONBLOCK 1
+// #endif
 
 struct hostent *ice_gethostbyname (const char *hostname, struct hostent *res,
                                    char *buffer, int buflen, int *error);
