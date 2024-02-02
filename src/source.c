@@ -900,6 +900,7 @@ source_write_to_client (source_t *source, connection_t *clicon)
 
   if (client->virgin == CLIENT_PAUSED || client->virgin == -1)
     {
+      printf ("DONT SEND, PAUSING");
       xa_debug (1, "WARNING: client paused");
       return;
     }
