@@ -38,9 +38,12 @@ port 8000
 logdir logs
 logfile ntripcaster.log
 
-mountposfile @absolute_path_to_mountpos.conf@
+######################## Automount Settings ####################################
+
+mountposfile /usr/local/ntripcaster/conf/mountpos.conf
 auto_mount false
 read_gpgga_interval 3
+
 ############################ Access Control ###################################
 # Here you specify which users have access to which mountpoints,
 # one line per mount.
