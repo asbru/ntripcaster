@@ -224,6 +224,7 @@ client_auto_select_station (void *conarg)
           thread_mutex_unlock (&client->mutex);
           sleep (info.read_gpgga_interval);
         }
+      sleep (1);
     }
   thread_exit (0);
   return;
